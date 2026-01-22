@@ -67,7 +67,6 @@ import { TaskCardComponent } from '../task-card/task-card.component';
             [task]="t"
             [accent]="border"
             (changed)="taskChanged.emit($event)"
-            (deleted)="taskDeleted.emit($event)"
           />
         }
 

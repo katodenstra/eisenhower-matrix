@@ -70,5 +70,6 @@ textarea {
   filter: saturate(0.7);
 }
 .cdk-drop-list-dragging .task-card {
+  pointer-events: none; /* prevent hover effects during drag */
   transition: transform 180ms ease; /* makes reordering feel less jagged */
 }
