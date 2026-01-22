@@ -1,1 +1,74 @@
-/* You can add global styles to this file, and also import other style files */
+---
+
+/* Global baseline. Friendly, rounded, not trying too hard. */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  background: #0f1115;
+  color: #e9eef7;
+}
+
+/* Links */
+a {
+  color: inherit;
+}
+
+/* Simple button base */
+button {
+  font: inherit;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9eef7;
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+button:active {
+  transform: translateY(1px);
+}
+
+/* Inputs */
+input,
+textarea {
+  font: inherit;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9eef7;
+  padding: 10px 12px;
+}
+textarea {
+  resize: vertical;
+}
+
+/* CDK Drag & Drop polish */
+.cdk-drag-preview {
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.cdk-drag-placeholder {
+  opacity: 0.35;
+  filter: saturate(0.7);
+}
+.cdk-drop-list-dragging .task-card {
+  transition: transform 180ms ease; /* makes reordering feel less jagged */
+}
