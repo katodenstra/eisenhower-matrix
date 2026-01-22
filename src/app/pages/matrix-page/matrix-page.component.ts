@@ -119,14 +119,12 @@ type ListsMap = Record<QuadrantId, Task[]>;
         height: 100%;
         display: grid;
         gap: 14px;
-        grid-template-areas:
-          'DO_NOW DO_LATER'
-          'DELEGATE ELIMINATE';
+
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-        transition:
-          grid-template-columns 260ms ease,
-          grid-template-rows 260ms ease;
+
+        /* important: allows grid items to stretch, not size to content */
+        align-items: stretch;
       }
 
       /* Tablet view stays 2x2 */

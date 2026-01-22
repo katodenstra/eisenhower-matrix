@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
-import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
+import { CdkDrag, DragDropModule, CdkDragStart, CdkDragEnd } from '@angular/cdk/drag-drop';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 import { Task } from '../../../models/task.models';
@@ -17,7 +17,13 @@ import { CalendarService } from '../../../services/calendar.service';
     ]),
   ],
   template: `
-    <article class="card" cdkDrag [style.borderColor]="accent">
+    <article
+      class="card"
+      cdkDrag
+      [style.borderColor]="accent"
+      (cdkDragStarted)="onDragStarted($event)"
+      (cdkDragEnded)="onDragEnded($event)"
+    >
       <div class="top" (click)="toggleExpanded()">
         <div class="left">
           <div class="title-row">
@@ -190,9 +196,21 @@ export class TaskCardComponent {
 
   expanded = signal(false);
 
+  private wasDragged = false;
+
+  onDragStarted(_ev: CdkDragStart): void {
+    this.wasDragged = true;
+  }
+
+  onDragEnded(_ev: CdkDragEnd): void {
+    // Click event can fire right after drop; reset on next tick.
+    queueMicrotask(() => (this.wasDragged = false));
+  }
+
   constructor(public calendar: CalendarService) {}
 
   toggleExpanded(): void {
+    if (this.wasDragged) return;
     this.expanded.set(!this.expanded());
   }
 

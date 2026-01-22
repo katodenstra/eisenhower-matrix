@@ -89,6 +89,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
         padding: 12px;
         display: flex;
         flex-direction: column;
+        height: 90%;
 
         /* Critical: allow internal scrolling instead of growing the grid */
         min-height: 0;
