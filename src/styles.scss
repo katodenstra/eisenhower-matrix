@@ -73,3 +73,13 @@ textarea {
   pointer-events: none; /* prevent hover effects during drag */
   transition: transform 180ms ease; /* makes reordering feel less jagged */
 }
+
+/* While dragging (and shortly after drop), make task cards non-interactive */
+body.drag-lock app-task-card .card {
+  pointer-events: none;
+}
+
+/* But allow the drag handle so the drag itself works */
+body.drag-lock app-task-card .drag-handle {
+  pointer-events: auto;
+}

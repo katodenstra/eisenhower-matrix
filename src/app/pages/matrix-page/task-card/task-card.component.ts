@@ -7,7 +7,6 @@ import {
   CdkDragHandle,
 } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
-import { trigger, state, style, transition, animate } from '@angular/animations';
 
 import { Task } from '../../../models/task.models';
 import { DragStateService } from '../../../services/drag-state.service';
@@ -18,13 +17,6 @@ type Meridian = 'AM' | 'PM';
   standalone: true,
   selector: 'app-task-card',
   imports: [DragDropModule, CdkDrag, CdkDragHandle, FormsModule],
-  animations: [
-    trigger('expandCollapse', [
-      state('collapsed', style({ height: '0px', opacity: 0, marginTop: '0px' })),
-      state('expanded', style({ height: '*', opacity: 1, marginTop: '10px' })),
-      transition('collapsed <=> expanded', animate('180ms ease')),
-    ]),
-  ],
   template: `
     <article
       class="card"
@@ -70,6 +62,7 @@ type Meridian = 'AM' | 'PM';
           type="button"
           class="drag-handle"
           cdkDragHandle
+          (pointerdown)="onDragHandleDown($event)"
           (click)="$event.stopPropagation()"
           aria-label="Reorder task"
           title="Drag to reorder"
@@ -86,7 +79,7 @@ type Meridian = 'AM' | 'PM';
       </div>
 
       <!-- DETAILS -->
-      <div class="details" [@expandCollapse]="expanded() ? 'expanded' : 'collapsed'">
+      <div class="details" [class.details--expanded]="expanded()">
         <div class="details-inner">
           <!-- Date & time section -->
           <div class="section">
@@ -330,6 +323,25 @@ type Meridian = 'AM' | 'PM';
       /* DETAILS */
       .details {
         overflow: hidden;
+
+        /* Collapsed by default (this is what fixed the drag bug) */
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+
+        /* Smooth expand/collapse */
+        transition:
+          max-height 180ms ease,
+          opacity 180ms ease,
+          margin-top 180ms ease;
+      }
+
+      /* Expanded state */
+      .details--expanded {
+        /* Large enough to fit your panel content */
+        max-height: 900px;
+        opacity: 1;
+        margin-top: 10px;
       }
       .details-inner {
         border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -522,14 +534,12 @@ export class TaskCardComponent {
   constructor(private dragState: DragStateService) {}
 
   onDragStarted(_ev: CdkDragStart): void {
-    this.suppressNextClick = true;
+    // start() is already called on pointerdown; calling it again is harmless.
     this.dragState.start();
   }
 
   onDragEnded(_ev: CdkDragEnd): void {
-    // Prevent the post-drop click from toggling any card
     this.dragState.end();
-    setTimeout(() => (this.suppressNextClick = false), 0);
   }
 
   toggleComplete(ev: MouseEvent): void {
@@ -542,7 +552,6 @@ export class TaskCardComponent {
 
     // If ANY drag is happening (or just ended), ignore expand/collapse.
     if (this.dragState.isDragging()) return;
-
     if (this.suppressNextClick) return;
 
     this.expanded.set(!this.expanded());
@@ -617,5 +626,11 @@ export class TaskCardComponent {
     ev.stopPropagation();
     const next = this.task.tags.filter((t) => t !== tag);
     this.changed.emit({ id: this.task.id, patch: { tags: next } });
+  }
+
+  onDragHandleDown(ev: PointerEvent): void {
+    // Start lock immediately on press, not when CDK emits "started".
+    ev.stopPropagation();
+    this.dragState.start();
   }
 }

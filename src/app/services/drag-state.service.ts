@@ -1,21 +1,30 @@
 import { Injectable, signal } from '@angular/core';
 
-/**
- * Shared drag state to prevent “mouseup click” side effects after dragging.
- * This is global because the click can land on a DIFFERENT card than the dragged one.
- */
 @Injectable({ providedIn: 'root' })
 export class DragStateService {
   readonly isDragging = signal(false);
 
+  private endTimer: number | null = null;
+
   start(): void {
-    this.isDragging.set(true);
+    if (this.endTimer !== null) {
+      window.clearTimeout(this.endTimer);
+      this.endTimer = null;
+    }
+    if (!this.isDragging()) {
+      this.isDragging.set(true);
+      document.body.classList.add('drag-lock');
+    }
   }
 
   end(): void {
-    // Keep it true for the click that happens right after drop (mouseup -> click).
-    requestAnimationFrame(() => {
-      setTimeout(() => this.isDragging.set(false), 120);
-    });
+    if (this.endTimer !== null) window.clearTimeout(this.endTimer);
+
+    // Keep lock long enough to swallow mouseup->click (and any delayed handlers).
+    this.endTimer = window.setTimeout(() => {
+      this.isDragging.set(false);
+      document.body.classList.remove('drag-lock');
+      this.endTimer = null;
+    }, 350);
   }
 }
