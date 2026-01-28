@@ -10,8 +10,10 @@ import { FormsModule } from '@angular/forms';
 
 import { Task } from '../../../models/task.models';
 import { DragStateService } from '../../../services/drag-state.service';
+import { A } from '@angular/cdk/keycodes';
 
 type Meridian = 'AM' | 'PM';
+type DatePickerAnchor = 'date' | 'switch';
 
 @Component({
   standalone: true,
@@ -54,27 +56,42 @@ type Meridian = 'AM' | 'PM';
           [title]="expanded() ? 'Collapse' : 'Expand'"
           aria-label="Toggle task details"
         >
-          <span class="chev" [class.chev--up]="expanded()">⌄</span>
+          <span class="material-symbols-rounded">
+            {{ expanded() ? 'expand_less' : 'expand_more' }}
+          </span>
         </button>
 
         <!-- drag handle (far right) -->
         <button
           type="button"
-          class="drag-handle"
+          class="material-symbols-rounded"
           cdkDragHandle
           (pointerdown)="onDragHandleDown($event)"
           (click)="$event.stopPropagation()"
           aria-label="Reorder task"
           title="Drag to reorder"
         >
-          ≡
+          drag_indicator
         </button>
       </div>
 
       <!-- accent date line -->
       <div class="meta">
-        <div class="due" [style.color]="accent">
-          {{ dueLine() }}
+        <div class="meta-inner">
+          @if (task.dueDate) {
+            <div class="due" [style.color]="accent">{{ task.dueDate }}</div>
+          }
+
+          @if (task.tags?.length) {
+            <div class="tags-inline">
+              @for (tag of task.tags.slice(0, 3); track tag) {
+                <span class="tag-pill">{{ tag }}</span>
+              }
+              @if (task.tags.length > 3) {
+                <span class="tag-pill tag-pill--muted">+{{ task.tags.length - 3 }}</span>
+              }
+            </div>
+          }
         </div>
       </div>
 
@@ -86,16 +103,21 @@ type Meridian = 'AM' | 'PM';
             <div class="section-title">Date & time</div>
 
             <!-- DATE ROW -->
-            <div class="row">
+            <div class="row row--date">
               <div class="row-left">
-                <span class="icon" aria-hidden="true">📅</span>
+                <span class="material-symbols-rounded icon">calendar_month</span>
                 <div class="row-text">
                   <div class="row-label">Date</div>
 
                   <!-- The "value" line (blank space when empty, as requested) -->
-                  <div class="row-value">
+                  <button
+                    type="button"
+                    class="row-value row-value-btn"
+                    (click)="openDatePicker('date', $event)"
+                    [attr.aria-label]="task.dueDate ? 'Change due date' : 'Set due date'"
+                  >
                     {{ task.dueDate ?? '' }}
-                  </div>
+                  </button>
                 </div>
               </div>
 
@@ -103,26 +125,16 @@ type Meridian = 'AM' | 'PM';
                 <input
                   type="checkbox"
                   [checked]="hasDate()"
-                  (change)="onToggleDate($any($event.target).checked)"
+                  (change)="onToggleDate($any($event.target).checked, $event)"
                 />
                 <span class="slider"></span>
               </label>
             </div>
 
-            <!-- hidden date input that we programmatically open -->
-            <input
-              #datePicker
-              class="hidden-input"
-              type="date"
-              [value]="task.dueDate ?? ''"
-              (change)="onPickedDate($any($event.target).value)"
-              (click)="$event.stopPropagation()"
-            />
-
             <!-- TIME ROW -->
             <div class="row">
               <div class="row-left">
-                <span class="icon" aria-hidden="true">🕒</span>
+                <span class="material-symbols-rounded icon">schedule</span>
                 <div class="row-text">
                   <div class="row-label">Time</div>
                   <div class="row-value">
@@ -194,12 +206,34 @@ type Meridian = 'AM' | 'PM';
                     (click)="removeTag(tag, $event)"
                     aria-label="Remove tag"
                   >
-                    ×
+                    <span class="material-symbols-rounded">close</span>
                   </button>
                 </span>
               }
 
-              @if (task.tags.length === 0) {
+              @if (!addingTag()) {
+                <button type="button" class="chip chip-add" (click)="startAddTag($event)">
+                  <span class="material-symbols-rounded">add</span>
+                  Add tag
+                </button>
+              } @else {
+                <div class="tag-editor" (click)="$event.stopPropagation()">
+                  <input
+                    class="tag-input"
+                    type="text"
+                    placeholder="New tag"
+                    [value]="newTag()"
+                    (input)="newTag.set($any($event.target).value)"
+                    (keydown.enter)="commitTag()"
+                    (keydown.escape)="cancelAddTag()"
+                  />
+                  <button type="button" class="tag-ok" (click)="commitTag()" aria-label="Add tag">
+                    <span class="material-symbols-rounded">check</span>
+                  </button>
+                </div>
+              }
+
+              @if (task.tags.length === 0 && !addingTag()) {
                 <span class="chip chip--muted">none</span>
               }
             </div>
@@ -216,7 +250,7 @@ type Meridian = 'AM' | 'PM';
         padding: 10px 12px;
         background: rgba(0, 0, 0, 0.18);
         backdrop-filter: blur(8px);
-        overflow: hidden;
+        overflow: visible;
       }
 
       /* HEADER LAYOUT (compact) */
@@ -310,16 +344,38 @@ type Meridian = 'AM' | 'PM';
       /* META LINE */
       .meta {
         margin-top: 8px;
-        display: flex;
-        align-items: center;
         min-height: 18px;
       }
+
+      .meta-inner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-left: calc(22px + 10px); /* align with title text */
+      }
+
       .due {
         font-size: 13px;
         font-weight: 600;
         opacity: 0.95;
       }
 
+      .tags-inline {
+        display: flex;
+        gap: 6px;
+        opacity: 0.95;
+      }
+
+      .tag-pill {
+        font-size: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        padding: 4px 8px;
+        opacity: 0.95;
+      }
+      .tag-pill--muted {
+        opacity: 0.7;
+      }
       /* DETAILS */
       .details {
         overflow: hidden;
@@ -342,6 +398,7 @@ type Meridian = 'AM' | 'PM';
         max-height: 900px;
         opacity: 1;
         margin-top: 10px;
+        overflow: visible;
       }
       .details-inner {
         border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -371,6 +428,9 @@ type Meridian = 'AM' | 'PM';
         border: 1px solid rgba(255, 255, 255, 0.08);
         margin-bottom: 10px;
       }
+      .row--date {
+        position: relative;
+      }
 
       .row-left {
         display: flex;
@@ -398,6 +458,19 @@ type Meridian = 'AM' | 'PM';
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .row-value-btn {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .row-value-btn:hover {
+        text-decoration: underline;
       }
 
       /* Switch */
@@ -438,15 +511,6 @@ type Meridian = 'AM' | 'PM';
       }
       input:checked + .slider:before {
         transform: translateX(18px);
-      }
-
-      /* Hidden date input (we open it programmatically) */
-      .hidden-input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-        width: 1px;
-        height: 1px;
       }
 
       /* Time picker */
@@ -511,6 +575,45 @@ type Meridian = 'AM' | 'PM';
       .chip-x:hover {
         background: rgba(255, 255, 255, 0.2);
       }
+
+      /* Tag editor */
+      .chip-add {
+        border: 0;
+        cursor: pointer;
+        color: inherit;
+      }
+
+      .tag-editor {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .tag-input {
+        width: 140px;
+        background: transparent;
+        border: 0;
+        outline: none;
+        color: inherit;
+      }
+
+      .tag-ok {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.14);
+        color: inherit;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      .tag-ok:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
     `,
   ],
 })
@@ -519,6 +622,11 @@ export class TaskCardComponent {
   @Input({ required: true }) accent!: string;
 
   @Output() changed = new EventEmitter<{ id: string; patch: Partial<Task> }>();
+  @Output() datePickerRequested = new EventEmitter<{
+    taskId: string;
+    rect: DOMRect;
+    anchor: DatePickerAnchor;
+  }>();
 
   expanded = signal(false);
 
@@ -530,6 +638,9 @@ export class TaskCardComponent {
   timeHour = 9;
   timeMinute = 0;
   timeMeridian: Meridian = 'AM';
+
+  addingTag = signal(false);
+  newTag = signal('');
 
   constructor(private dragState: DragStateService) {}
 
@@ -567,25 +678,21 @@ export class TaskCardComponent {
     return this.task.dueDate ? this.task.dueDate : '';
   }
 
-  onToggleDate(on: boolean): void {
+  openDatePicker(anchor: DatePickerAnchor, ev?: Event): void {
+    ev?.stopPropagation();
+
+    const rect = this.getAnchorRect(ev);
+    if (!rect) return;
+    this.datePickerRequested.emit({ taskId: this.task.id, rect, anchor });
+  }
+
+  onToggleDate(on: boolean, ev?: Event): void {
     if (on) {
-      // If no date yet, open the native date picker
-      if (!this.task.dueDate) {
-        // Trigger the hidden input picker via DOM
-        const el = document.querySelector<HTMLInputElement>(
-          `input[type="date"][value="${this.task.dueDate ?? ''}"]`,
-        );
-        // ^ this selector can be fragile; we improve below by using @ViewChild if you want.
-        // But it works if there's only one open at a time.
-        el?.showPicker?.();
-        el?.click();
-        return;
-      }
-      // If there is a date already, do nothing (it stays visible)
+      this.openDatePicker('switch', ev);
       return;
     }
 
-    // Turning off date clears it
+    //Turning off date swithch clears the date
     this.changed.emit({ id: this.task.id, patch: { dueDate: undefined } });
   }
 
@@ -632,5 +739,35 @@ export class TaskCardComponent {
     // Start lock immediately on press, not when CDK emits "started".
     ev.stopPropagation();
     this.dragState.start();
+  }
+
+  private getAnchorRect(ev?: Event): DOMRect | null {
+    if (!ev) return null;
+    const target = ev.target as HTMLElement | null;
+    if (!target) return null;
+    const switchEl = target.closest('.switch') as HTMLElement | null;
+    const el = switchEl ?? target;
+    return el.getBoundingClientRect();
+  }
+
+  //Adding tags when task is expanded
+  startAddTag(ev?: Event): void {
+    ev?.stopPropagation();
+    this.addingTag.set(true);
+    this.newTag.set('');
+  }
+
+  cancelAddTag(): void {
+    this.addingTag.set(false);
+    this.newTag.set('');
+  }
+
+  commitTag(): void {
+    const raw = this.newTag().trim();
+    if (!raw) return;
+
+    const next = Array.from(new Set([...(this.task.tags ?? []), raw]));
+    this.changed.emit({ id: this.task.id, patch: { tags: next } });
+    this.cancelAddTag();
   }
 }

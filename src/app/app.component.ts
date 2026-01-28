@@ -1,32 +1,14 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
-import { AsyncPipe } from '@angular/common';
-import { FakeAuthService } from './services/fake-auth.service';
+import { RouterOutlet } from '@angular/router';
+import { SideNavComponent } from './components/side-nav/side-nav.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, AsyncPipe],
+  imports: [RouterOutlet, SideNavComponent],
   template: `
     <div class="shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="logo">E</div>
-          <div>
-            <div class="title">Eisenhower Matrix</div>
-            <div class="subtitle">Decide what matters. Then pretend you’ll do it.</div>
-          </div>
-        </div>
-
-        <div class="actions">
-          @if ((auth.user$ | async) === null) {
-            <a routerLink="/login" class="link">Login</a>
-            <a routerLink="/register" class="link">Register</a>
-          } @else {
-            <button (click)="auth.logout()">Logout</button>
-          }
-        </div>
-      </header>
+      <app-side-nav />
 
       <main class="content">
         <router-outlet />
@@ -36,62 +18,21 @@ import { FakeAuthService } from './services/fake-auth.service';
   styles: [
     `
       .shell {
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
+        min-height: 100vh;
       }
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 18px;
-        background: rgba(255, 255, 255, 0.04);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        position: sticky;
-        top: 0;
-        backdrop-filter: blur(12px);
-        z-index: 5;
-      }
-      .brand {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-      }
-      .logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
-        background: rgba(255, 255, 255, 0.1);
-        font-weight: 800;
-      }
-      .title {
-        font-weight: 700;
-      }
-      .subtitle {
-        font-size: 12px;
-        opacity: 0.75;
-        margin-top: 2px;
-      }
-      .actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .link {
-        text-decoration: none;
-        padding: 8px 10px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.06);
-      }
+
+      /* Keep content visible when nav is collapsed; expanded overlays on top. */
       .content {
-        padding: 18px;
-        flex: 1;
+        min-height: 100vh;
+        padding: 14px 14px 14px 106px; /* 78 + left gap + breathing room */
+      }
+
+      @media (max-width: 720px) {
+        .content {
+          padding-left: 14px;
+        }
       }
     `,
   ],
 })
-export class AppComponent {
-  constructor(public auth: FakeAuthService) {}
-}
+export class AppComponent {}

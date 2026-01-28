@@ -33,22 +33,22 @@ import { TaskCardComponent } from '../task-card/task-card.component';
         <div class="quad-actions">
           <!-- Hide + in shrunk state (the sketch shows expand-only controls) -->
           <button
-            class="icon-btn"
+            class="material-symbols-rounded"
             (click)="newTask.emit()"
             title="New task"
             [class.hide-when-shrunk]="isShrunk"
           >
-            +
+            add
           </button>
 
           <!-- Inbox doesn't participate in matrix expansion -->
           @if (!isInbox && quadrantId !== 'UNCATEGORIZED') {
             <button
-              class="icon-btn expand-btn"
-              (click)="toggleMatrixExpand.emit(quadrantId)"
+              class="material-symbols-rounded"
+              (click)="onToggleMatrixExpand()"
               [title]="isDominant ? 'Collapse' : 'Expand'"
             >
-              {{ isDominant ? '⤡' : '⤢' }}
+              {{ isDominant ? 'close_fullscreen' : 'open_in_full' }}
             </button>
           }
         </div>
@@ -59,6 +59,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
         cdkDropList
         [id]="quadrantId"
         [cdkDropListData]="tasks"
+        [cdkDropListConnectedTo]="connectedTo"
         (cdkDropListDropped)="drop.emit($event)"
       >
         @for (t of tasks; track t.id) {
@@ -67,6 +68,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
             [task]="t"
             [accent]="border"
             (changed)="taskChanged.emit($event)"
+            (datePickerRequested)="datePickerRequested.emit($event)"
           />
         }
 
@@ -81,14 +83,23 @@ import { TaskCardComponent } from '../task-card/task-card.component';
   `,
   styles: [
     `
+      :host {
+        display: block;
+        height: 100%;
+        min-height: 0; /* critical: allows shrinking inside grid */
+      }
+
       .quad {
         position: relative;
         border: 2px solid;
         border-radius: 18px;
+        box-sizing: border-box;
+        position: relative;
         padding: 12px;
         display: flex;
         flex-direction: column;
-        height: 90%;
+        height: 100%;
+        z-index: 0;
 
         /* Critical: allow internal scrolling instead of growing the grid */
         min-height: 0;
@@ -136,18 +147,23 @@ import { TaskCardComponent } from '../task-card/task-card.component';
         transition: opacity 180ms ease;
       }
 
+      .task-card {
+        display: block;
+      }
+
       .task-list {
+        align-content: start;
         margin-top: 10px;
         display: grid;
         gap: 10px;
-
+        grid-auto-rows: max-content;
         /* Scroll region */
         flex: 1;
         min-height: 0; /* critical in flex containers */
         overflow: auto;
         padding-right: 4px;
 
-        transition: opacity 200ms ease;
+        transition: opacity 300ms ease;
       }
 
       .empty {
@@ -233,12 +249,18 @@ export class QuadrantComponent {
   @Input({ required: true }) tasks: Task[] = [];
   @Input() expandedMatrixId: Exclude<QuadrantId, 'UNCATEGORIZED'> | null = null;
   @Input() isInbox = false;
+  @Input() connectedTo: string[] = [];
 
   @Output() newTask = new EventEmitter<void>();
   @Output() toggleMatrixExpand = new EventEmitter<Exclude<QuadrantId, 'UNCATEGORIZED'>>();
   @Output() taskChanged = new EventEmitter<{ id: string; patch: Partial<Task> }>();
   @Output() taskDeleted = new EventEmitter<string>();
   @Output() drop = new EventEmitter<CdkDragDrop<Task[]>>();
+  @Output() datePickerRequested = new EventEmitter<{
+    taskId: string;
+    rect: DOMRect;
+    anchor: 'date' | 'switch';
+  }>();
 
   get isDominant(): boolean {
     return !this.isInbox && this.expandedMatrixId === this.quadrantId;
@@ -248,5 +270,10 @@ export class QuadrantComponent {
     return (
       !this.isInbox && this.expandedMatrixId !== null && this.expandedMatrixId !== this.quadrantId
     );
+  }
+
+  onToggleMatrixExpand(): void {
+    if (this.isInbox || this.quadrantId === 'UNCATEGORIZED') return;
+    this.toggleMatrixExpand.emit(this.quadrantId);
   }
 }
