@@ -1,13 +1,20 @@
-export type QuadrantId = 'DO_NOW' | 'DO_LATER' | 'DELEGATE' | 'ELIMINATE' | 'UNCATEGORIZED';
+export type QuadrantId =
+  | 'DO_NOW'
+  | 'DO_LATER'
+  | 'DELEGATE'
+  | 'ELIMINATE'
+  | 'UNCATEGORIZED'
+  | 'COMPLETED';
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
   tags: string[];
-  dueDate?: string; // YYYY-MM-DD for simplicity
+  dueDate?: string; // YYYY-MM-DD
   completed: boolean;
   quadrant: QuadrantId;
+  previousQuadrantId?: QuadrantId;
   createdAt: number;
   updatedAt: number;
 }

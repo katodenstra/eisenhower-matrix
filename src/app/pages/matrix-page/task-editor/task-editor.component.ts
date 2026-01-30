@@ -1,6 +1,16 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+  ViewChild,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuadrantId } from '../../../models/task.models';
+import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
 
 @Component({
   standalone: true,
@@ -33,13 +43,32 @@ import { QuadrantId } from '../../../models/task.models';
               <div class="options">
                 <div class="field">
                   <label>Due date (optional)</label>
-                  <input type="date" [(ngModel)]="dueDate" />
+                  <div class="date-field" #dateField>
+                    <div class="date-row">
+                      <button type="button" class="date-btn" (click)="openDatePicker()">
+                        {{ dueDate || 'Select date' }}
+                      </button>
+                      @if (dueDate) {
+                        <button type="button" class="date-clear" (click)="clearDate()">Clear</button>
+                      }
+                    </div>
+
+                    @if (datePickerOpen()) {
+                      <div class="date-popover" (click)="$event.stopPropagation()">
+                        <app-date-picker
+                          [mode]="'popover'"
+                          [value]="dueDate"
+                          (selected)="onDatePicked($event)"
+                        />
+                      </div>
+                    }
+                  </div>
                 </div>
 
                 <div class="field">
                   <label>Description (optional)</label>
                   <textarea
-                    rows="4"
+                    rows="6"
                     [(ngModel)]="description"
                     placeholder="Add context..."
                   ></textarea>
@@ -60,6 +89,7 @@ import { QuadrantId } from '../../../models/task.models';
         </div>
       </div>
     }
+
   `,
   styles: [
     `
@@ -74,6 +104,7 @@ import { QuadrantId } from '../../../models/task.models';
       }
       .modal {
         width: min(560px, 100%);
+        min-height: 520px;
         border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(20, 22, 30, 0.92);
@@ -129,6 +160,54 @@ import { QuadrantId } from '../../../models/task.models';
         gap: 12px;
       }
 
+      .options textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      .date-field {
+        position: relative;
+      }
+
+      .date-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .date-btn {
+        flex: 1 1 auto;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: inherit;
+        text-align: left;
+        padding: 0 12px;
+        cursor: pointer;
+      }
+
+      .date-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .date-clear {
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: transparent;
+        color: inherit;
+        padding: 0 12px;
+        cursor: pointer;
+      }
+
+      .date-popover {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 10;
+      }
+
       .footer {
         display: flex;
         justify-content: flex-end;
@@ -137,11 +216,12 @@ import { QuadrantId } from '../../../models/task.models';
       }
     `,
   ],
-  imports: [FormsModule],
+  imports: [FormsModule, DatePickerComponent],
 })
 export class TaskEditorComponent {
   @Input({ required: true }) open = false;
   @Input({ required: true }) quadrant: QuadrantId = 'UNCATEGORIZED';
+  @ViewChild('dateField') dateField?: ElementRef<HTMLElement>;
 
   @Output() close = new EventEmitter<void>();
   @Output() create = new EventEmitter<{
@@ -159,6 +239,29 @@ export class TaskEditorComponent {
   tagsRaw = '';
 
   showOptions = signal(false);
+  datePickerOpen = signal(false);
+
+  openDatePicker(): void {
+    this.datePickerOpen.set(true);
+  }
+
+  onDatePicked(iso: string): void {
+    this.dueDate = iso;
+    this.datePickerOpen.set(false);
+  }
+
+  clearDate(): void {
+    this.dueDate = '';
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.datePickerOpen()) return;
+    const target = event.target as Node | null;
+    const field = this.dateField?.nativeElement;
+    if (field && target && field.contains(target)) return;
+    this.datePickerOpen.set(false);
+  }
 
   submit(): void {
     const tags = this.tagsRaw
@@ -180,5 +283,6 @@ export class TaskEditorComponent {
     this.description = '';
     this.tagsRaw = '';
     this.showOptions.set(false);
+    this.datePickerOpen.set(false);
   }
 }

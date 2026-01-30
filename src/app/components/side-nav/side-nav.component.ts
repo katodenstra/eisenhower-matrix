@@ -36,7 +36,14 @@ type NavLink = {
 
         <!-- Brand (logo) -->
         <div class="brand">
-          <div class="rail-btn brand-logo" aria-hidden="true">E</div>
+          <div class="rail-btn brand-logo" aria-hidden="true">
+            <img
+              src="brand/eisen-monogram.png"
+              alt="Eisen Logo"
+              class="brand-logo-img"
+              aria-hidden="true"
+            />
+          </div>
 
           @if (open()) {
             <div class="brand-text">
@@ -101,12 +108,16 @@ type NavLink = {
 
         <!-- USER ALWAYS PRESENT -->
         <div class="user" [class.user--collapsed]="!open()">
-          <div class="avatar" aria-hidden="true"></div>
+          <div class="avatar" aria-hidden="true">
+            <img src="users/user.png" alt="" class="avatar-img" />
+          </div>
 
           @if (open()) {
             <div class="user-meta">
-              <div class="user-name">{{ (auth.user$ | async)?.displayName ?? 'Guest Human' }}</div>
-              <div class="user-sub">{{ (auth.user$ | async)?.email ?? 'Sign in to sync' }}</div>
+              <div class="user-name">
+                {{ (auth.user$ | async)?.displayName ?? 'Mauricio Villada' }}
+              </div>
+              <div class="user-sub">{{ (auth.user$ | async)?.email ?? 'Go get things done.' }}</div>
             </div>
           }
         </div>
@@ -152,6 +163,7 @@ type NavLink = {
         border-radius: 18px;
         display: grid;
         place-items: center;
+        overflow: hidden;
 
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -177,6 +189,14 @@ type NavLink = {
         font-weight: 900;
         background: rgba(74, 163, 255, 0.14);
         border-color: rgba(74, 163, 255, 0.22);
+      }
+
+      .brand-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        border-radius: inherit;
       }
 
       .brand-text {
@@ -381,6 +401,16 @@ type NavLink = {
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+      }
+
+      .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
 
       .user-meta {

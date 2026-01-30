@@ -1,4 +1,15 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  ViewChild,
+  signal,
+} from '@angular/core';
 import {
   CdkDrag,
   DragDropModule,
@@ -8,9 +19,8 @@ import {
 } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 
-import { Task } from '../../../models/task.models';
+import { QUADRANTS, Task } from '../../../models/task.models';
 import { DragStateService } from '../../../services/drag-state.service';
-import { A } from '@angular/cdk/keycodes';
 
 type Meridian = 'AM' | 'PM';
 type DatePickerAnchor = 'date' | 'switch';
@@ -45,26 +55,41 @@ type DatePickerAnchor = 'date' | 'switch';
 
         <!-- title -->
         <div class="title-wrap">
-          <div class="title" [class.title--done]="task.completed">{{ task.title }}</div>
+          <div
+            class="title"
+            [class.title--done]="task.completed && !isCompletedQuadrant()"
+            [class.title--completed]="isCompletedQuadrant()"
+          >
+            {{ task.title }}
+          </div>
         </div>
 
-        <!-- expand button (ONLY way to expand/collapse) -->
-        <button
-          type="button"
-          class="expand"
-          (click)="toggleExpanded($event)"
-          [title]="expanded() ? 'Collapse' : 'Expand'"
-          aria-label="Toggle task details"
-        >
-          <span class="material-symbols-rounded">
-            {{ expanded() ? 'expand_less' : 'expand_more' }}
-          </span>
-        </button>
+        <!-- expand button - changes to color dot when task is in COMPLETED -->
+        @if (isCompletedQuadrant()) {
+          <span
+            class="origin-dot"
+            [style.backgroundColor]="originDotColor()"
+            aria-label="Original quadrant"
+            title="Original quadrant"
+          ></span>
+        } @else {
+          <button
+            type="button"
+            class="expand"
+            (click)="toggleExpanded($event)"
+            [title]="expanded() ? 'Collapse' : 'Expand'"
+            aria-label="Toggle task details"
+          >
+            <span class="material-symbols-rounded">
+              {{ expanded() ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
+        }
 
         <!-- drag handle (far right) -->
         <button
           type="button"
-          class="material-symbols-rounded"
+          class="material-symbols-rounded drag-handle"
           cdkDragHandle
           (pointerdown)="onDragHandleDown($event)"
           (click)="$event.stopPropagation()"
@@ -95,7 +120,7 @@ type DatePickerAnchor = 'date' | 'switch';
         </div>
       </div>
 
-      <!-- DETAILS -->
+      <!-- DETAILS (disabled in COMPLETED by simply never showing expand button; still safe to keep collapsed) -->
       <div class="details" [class.details--expanded]="expanded()">
         <div class="details-inner">
           <!-- Date & time section -->
@@ -109,7 +134,6 @@ type DatePickerAnchor = 'date' | 'switch';
                 <div class="row-text">
                   <div class="row-label">Date</div>
 
-                  <!-- The "value" line (blank space when empty, as requested) -->
                   <button
                     type="button"
                     class="row-value row-value-btn"
@@ -132,64 +156,80 @@ type DatePickerAnchor = 'date' | 'switch';
             </div>
 
             <!-- TIME ROW -->
-            <div class="row">
-              <div class="row-left">
-                <span class="material-symbols-rounded icon">schedule</span>
-                <div class="row-text">
-                  <div class="row-label">Time</div>
-                  <div class="row-value">
-                    @if (hasTime()) {
-                      {{ timeDisplay() }}
-                    } @else {
-                      {{ '' }}
-                    }
+            <div class="time-field" #timeField>
+              <div class="row row--time" (click)="openTimePicker($event)">
+                <div class="row-left">
+                  <span class="material-symbols-rounded icon">schedule</span>
+                  <div class="row-text">
+                    <div class="row-label">Time</div>
+                    <div class="row-value">
+                      @if (hasTime()) {
+                        {{ timeDisplay() }}
+                      } @else {
+                        {{ '' }}
+                      }
+                    </div>
                   </div>
                 </div>
+
+                <label class="switch" (click)="$event.stopPropagation()">
+                  <input
+                    type="checkbox"
+                    [checked]="hasTime()"
+                    (change)="onToggleTime($any($event.target).checked)"
+                  />
+                  <span class="slider"></span>
+                </label>
               </div>
 
-              <label class="switch" (click)="$event.stopPropagation()">
-                <input
-                  type="checkbox"
-                  [checked]="hasTime()"
-                  (change)="onToggleTime($any($event.target).checked)"
-                />
-                <span class="slider"></span>
-              </label>
+              @if (timePickerOpen()) {
+                <div class="time-picker" (click)="$event.stopPropagation()">
+                  <input
+                    class="time-input"
+                    type="number"
+                    min="1"
+                    max="12"
+                    [(ngModel)]="timeHour"
+                    (ngModelChange)="commitTime()"
+                    aria-label="Hour"
+                  />
+                  <span class="time-sep">:</span>
+                  <input
+                    class="time-input"
+                    type="number"
+                    min="0"
+                    max="59"
+                    [(ngModel)]="timeMinute"
+                    (ngModelChange)="commitTime()"
+                    aria-label="Minutes"
+                  />
+                  <select
+                    class="time-meridian"
+                    [(ngModel)]="timeMeridian"
+                    (ngModelChange)="commitTime()"
+                    aria-label="AM/PM"
+                  >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
+              }
             </div>
+          </div>
 
-            <!-- TIME PICKER (3 fields) -->
-            @if (timeEnabled()) {
-              <div class="time-picker" (click)="$event.stopPropagation()">
-                <input
-                  class="time-input"
-                  type="number"
-                  min="1"
-                  max="12"
-                  [(ngModel)]="timeHour"
-                  (ngModelChange)="commitTime()"
-                  aria-label="Hour"
-                />
-                <span class="time-sep">:</span>
-                <input
-                  class="time-input"
-                  type="number"
-                  min="0"
-                  max="59"
-                  [(ngModel)]="timeMinute"
-                  (ngModelChange)="commitTime()"
-                  aria-label="Minutes"
-                />
-                <select
-                  class="time-meridian"
-                  [(ngModel)]="timeMeridian"
-                  (ngModelChange)="commitTime()"
-                  aria-label="AM/PM"
-                >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-            }
+          <!-- Description section -->
+          <div class="section">
+            <div class="section-title">Description</div>
+            <div class="desc-field">
+              <textarea
+                class="desc-input"
+                rows="4"
+                [(ngModel)]="descriptionDraft"
+                (focus)="onDescriptionFocus()"
+                (blur)="onDescriptionBlur()"
+                placeholder="Add context..."
+              ></textarea>
+            </div>
           </div>
 
           <!-- Tags section -->
@@ -253,7 +293,6 @@ type DatePickerAnchor = 'date' | 'switch';
         overflow: visible;
       }
 
-      /* HEADER LAYOUT (compact) */
       .header {
         display: grid;
         grid-template-columns: auto 1fr auto auto;
@@ -298,6 +337,22 @@ type DatePickerAnchor = 'date' | 'switch';
         opacity: 0.7;
       }
 
+      /* Completed quadrant style: dimmed but NOT crossed out */
+      .title--completed {
+        opacity: 0.55;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .origin-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-right: 6px;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+      }
+
       .expand,
       .drag-handle {
         width: 40px;
@@ -331,17 +386,6 @@ type DatePickerAnchor = 'date' | 'switch';
         cursor: grabbing;
       }
 
-      .chev {
-        display: inline-block;
-        transform: translateY(-1px);
-        transition: transform 160ms ease;
-        font-size: 18px;
-      }
-      .chev--up {
-        transform: rotate(180deg) translateY(1px);
-      }
-
-      /* META LINE */
       .meta {
         margin-top: 8px;
         min-height: 18px;
@@ -351,7 +395,7 @@ type DatePickerAnchor = 'date' | 'switch';
         display: flex;
         align-items: center;
         gap: 8px;
-        padding-left: calc(22px + 10px); /* align with title text */
+        padding-left: calc(22px + 10px);
       }
 
       .due {
@@ -376,30 +420,25 @@ type DatePickerAnchor = 'date' | 'switch';
       .tag-pill--muted {
         opacity: 0.7;
       }
-      /* DETAILS */
+
       .details {
         overflow: hidden;
-
-        /* Collapsed by default (this is what fixed the drag bug) */
         max-height: 0;
         opacity: 0;
         margin-top: 0;
-
-        /* Smooth expand/collapse */
         transition:
           max-height 180ms ease,
           opacity 180ms ease,
           margin-top 180ms ease;
       }
 
-      /* Expanded state */
       .details--expanded {
-        /* Large enough to fit your panel content */
         max-height: 900px;
         opacity: 1;
         margin-top: 10px;
         overflow: visible;
       }
+
       .details-inner {
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         padding-top: 12px;
@@ -428,9 +467,6 @@ type DatePickerAnchor = 'date' | 'switch';
         border: 1px solid rgba(255, 255, 255, 0.08);
         margin-bottom: 10px;
       }
-      .row--date {
-        position: relative;
-      }
 
       .row-left {
         display: flex;
@@ -452,7 +488,7 @@ type DatePickerAnchor = 'date' | 'switch';
       }
       .row-value {
         margin-top: 4px;
-        min-height: 16px; /* keeps the “empty space” even when blank */
+        min-height: 16px;
         font-size: 13px;
         opacity: 0.85;
         white-space: nowrap;
@@ -473,7 +509,10 @@ type DatePickerAnchor = 'date' | 'switch';
         text-decoration: underline;
       }
 
-      /* Switch */
+      .time-field {
+        position: relative;
+      }
+
       .switch {
         position: relative;
         display: inline-block;
@@ -513,7 +552,6 @@ type DatePickerAnchor = 'date' | 'switch';
         transform: translateX(18px);
       }
 
-      /* Time picker */
       .time-picker {
         display: flex;
         align-items: center;
@@ -526,23 +564,59 @@ type DatePickerAnchor = 'date' | 'switch';
         margin-bottom: 8px;
         width: fit-content;
       }
+
+      .desc-input {
+        width: 100%;
+        min-height: 120px;
+        resize: vertical;
+        box-sizing: border-box;
+        border: 0;
+        background: transparent;
+        padding: 0;
+      }
+
+      .desc-field {
+        padding: 10px 10px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
       .time-input {
         width: 64px;
         text-align: center;
+        height: 40px;
+        padding: 6px 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: #e9eef7;
+        font-size: 14px;
+        line-height: 1;
+        box-sizing: border-box;
+      }
+
+      .time-input::-webkit-inner-spin-button,
+      .time-input::-webkit-outer-spin-button {
+        filter: invert(1);
       }
       .time-sep {
         opacity: 0.7;
         font-weight: 800;
       }
       .time-meridian {
-        border-radius: 12px;
+        border-radius: 14px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(255, 255, 255, 0.06);
-        color: inherit;
-        padding: 10px 12px;
+        color: #e9eef7;
+        height: 40px;
+        padding: 6px 12px;
+        box-sizing: border-box;
+        font-size: 14px;
+        line-height: 1;
+        appearance: none;
+        -webkit-appearance: none;
       }
 
-      /* Tags chips */
       .chips {
         display: flex;
         gap: 8px;
@@ -576,7 +650,6 @@ type DatePickerAnchor = 'date' | 'switch';
         background: rgba(255, 255, 255, 0.2);
       }
 
-      /* Tag editor */
       .chip-add {
         border: 0;
         cursor: pointer;
@@ -617,9 +690,10 @@ type DatePickerAnchor = 'date' | 'switch';
     `,
   ],
 })
-export class TaskCardComponent {
+export class TaskCardComponent implements OnChanges {
   @Input({ required: true }) task!: Task;
   @Input({ required: true }) accent!: string;
+  @ViewChild('timeField') timeField?: ElementRef<HTMLElement>;
 
   @Output() changed = new EventEmitter<{ id: string; patch: Partial<Task> }>();
   @Output() datePickerRequested = new EventEmitter<{
@@ -630,22 +704,27 @@ export class TaskCardComponent {
 
   expanded = signal(false);
 
-  // Click suppression for drag end
   private suppressNextClick = false;
 
-  // Local "time" UI state (stored in description for now unless you add fields)
   timeEnabled = signal(false);
+  timePickerOpen = signal(false);
   timeHour = 9;
   timeMinute = 0;
   timeMeridian: Meridian = 'AM';
+
+  descriptionDraft = '';
+  private descriptionFocused = false;
 
   addingTag = signal(false);
   newTag = signal('');
 
   constructor(private dragState: DragStateService) {}
 
+  isCompletedQuadrant(): boolean {
+    return this.task.quadrant === 'COMPLETED';
+  }
+
   onDragStarted(_ev: CdkDragStart): void {
-    // start() is already called on pointerdown; calling it again is harmless.
     this.dragState.start();
   }
 
@@ -660,27 +739,23 @@ export class TaskCardComponent {
 
   toggleExpanded(ev: MouseEvent): void {
     ev.stopPropagation();
-
-    // If ANY drag is happening (or just ended), ignore expand/collapse.
     if (this.dragState.isDragging()) return;
     if (this.suppressNextClick) return;
-
     this.expanded.set(!this.expanded());
   }
 
-  // Date helpers
+  ngOnChanges(changes: SimpleChanges): void {
+    if ('task' in changes && !this.descriptionFocused) {
+      this.descriptionDraft = this.task.description ?? '';
+    }
+  }
+
   hasDate(): boolean {
     return !!this.task.dueDate;
   }
 
-  dueLine(): string {
-    // Accent line under the title
-    return this.task.dueDate ? this.task.dueDate : '';
-  }
-
   openDatePicker(anchor: DatePickerAnchor, ev?: Event): void {
     ev?.stopPropagation();
-
     const rect = this.getAnchorRect(ev);
     if (!rect) return;
     this.datePickerRequested.emit({ taskId: this.task.id, rect, anchor });
@@ -691,17 +766,9 @@ export class TaskCardComponent {
       this.openDatePicker('switch', ev);
       return;
     }
-
-    //Turning off date swithch clears the date
     this.changed.emit({ id: this.task.id, patch: { dueDate: undefined } });
   }
 
-  onPickedDate(value: string): void {
-    const dueDate = value?.trim() ? value : undefined;
-    this.changed.emit({ id: this.task.id, patch: { dueDate } });
-  }
-
-  // Time helpers
   hasTime(): boolean {
     return this.timeEnabled();
   }
@@ -709,15 +776,24 @@ export class TaskCardComponent {
   onToggleTime(on: boolean): void {
     this.timeEnabled.set(on);
     if (!on) {
-      // resets display, leaving blank space
+      this.timePickerOpen.set(false);
       this.timeHour = 9;
       this.timeMinute = 0;
       this.timeMeridian = 'AM';
+      return;
     }
+    this.timePickerOpen.set(true);
+  }
+
+  openTimePicker(ev?: Event): void {
+    ev?.stopPropagation();
+    if (!this.timeEnabled()) {
+      this.timeEnabled.set(true);
+    }
+    this.timePickerOpen.set(true);
   }
 
   commitTime(): void {
-    // clamp
     const h = Math.min(12, Math.max(1, Number(this.timeHour || 1)));
     const m = Math.min(59, Math.max(0, Number(this.timeMinute || 0)));
     this.timeHour = h;
@@ -729,6 +805,18 @@ export class TaskCardComponent {
     return `${this.timeHour}:${mm} ${this.timeMeridian}`;
   }
 
+  onDescriptionFocus(): void {
+    this.descriptionFocused = true;
+  }
+
+  onDescriptionBlur(): void {
+    this.descriptionFocused = false;
+    const trimmed = this.descriptionDraft.trim();
+    const next = trimmed ? trimmed : undefined;
+    if ((this.task.description ?? undefined) === next) return;
+    this.changed.emit({ id: this.task.id, patch: { description: next } });
+  }
+
   removeTag(tag: string, ev: MouseEvent): void {
     ev.stopPropagation();
     const next = this.task.tags.filter((t) => t !== tag);
@@ -736,9 +824,17 @@ export class TaskCardComponent {
   }
 
   onDragHandleDown(ev: PointerEvent): void {
-    // Start lock immediately on press, not when CDK emits "started".
     ev.stopPropagation();
     this.dragState.start();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.timePickerOpen()) return;
+    const target = event.target as Node | null;
+    const field = this.timeField?.nativeElement;
+    if (field && target && field.contains(target)) return;
+    this.timePickerOpen.set(false);
   }
 
   private getAnchorRect(ev?: Event): DOMRect | null {
@@ -750,7 +846,6 @@ export class TaskCardComponent {
     return el.getBoundingClientRect();
   }
 
-  //Adding tags when task is expanded
   startAddTag(ev?: Event): void {
     ev?.stopPropagation();
     this.addingTag.set(true);
@@ -769,5 +864,13 @@ export class TaskCardComponent {
     const next = Array.from(new Set([...(this.task.tags ?? []), raw]));
     this.changed.emit({ id: this.task.id, patch: { tags: next } });
     this.cancelAddTag();
+  }
+
+  originDotColor(): string {
+    const q = this.task.previousQuadrantId;
+    if (!q) return 'rgba(255,255,255,0.35)';
+
+    const found = QUADRANTS.find((x) => x.id === q);
+    return found?.border ?? 'rgba(255,255,255,0.35)';
   }
 }

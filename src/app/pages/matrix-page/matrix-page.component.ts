@@ -1,4 +1,4 @@
-import { Component, HostListener, signal } from '@angular/core';
+import { Component, computed, HostListener, signal } from '@angular/core';
 import {
   DragDropModule,
   CdkDragDrop,
@@ -55,24 +55,45 @@ type ListsMap = Record<QuadrantId, Task[]>;
       </section>
 
       <!-- UNCATEGORIZED -->
-      <section class="inbox">
-        <app-quadrant
-          [isInbox]="true"
-          [quadrantId]="'UNCATEGORIZED'"
-          [title]="'Uncategorized tasks'"
-          [subtitle]="'Drag into a quadrant when you stop procrastinating'"
-          [bg]="'rgba(255,255,255,0.04)'"
-          [border]="'rgba(255,255,255,0.14)'"
-          [expandedMatrixId]="expandedMatrixId()"
-          [tasks]="list('UNCATEGORIZED')"
-          [connectedTo]="dropListIds"
-          (newTask)="openCreate('UNCATEGORIZED')"
-          (toggleMatrixExpand)="toggleMatrixExpand($event)"
-          (taskChanged)="onTaskChanged($event)"
-          (taskDeleted)="store.deleteTask($event)"
-          (datePickerRequested)="openDatePickerForTask($event)"
-          (drop)="onDrop($event)"
-        />
+      <section class="inboxGrid">
+        <div class="inboxCol">
+          <app-quadrant
+            [isInbox]="true"
+            [quadrantId]="'UNCATEGORIZED'"
+            [title]="'Uncategorized tasks'"
+            [subtitle]="'Drag into a quadrant when you stop procrastinating'"
+            [bg]="'rgba(255,255,255,0.04)'"
+            [border]="'rgba(255,255,255,0.14)'"
+            [expandedMatrixId]="expandedMatrixId()"
+            [tasks]="list('UNCATEGORIZED')"
+            [connectedTo]="dropListIds"
+            (newTask)="openCreate('UNCATEGORIZED')"
+            (toggleMatrixExpand)="toggleMatrixExpand($event)"
+            (taskChanged)="onTaskChanged($event)"
+            (taskDeleted)="store.deleteTask($event)"
+            (datePickerRequested)="openDatePickerForTask($event)"
+            (drop)="onDrop($event)"
+          />
+        </div>
+        <div class="inboxCol">
+          <app-quadrant
+            [isInbox]="true"
+            [quadrantId]="'COMPLETED'"
+            [allowCreate]="false"
+            [title]="'Completed tasks'"
+            [subtitle]="'Look at you go!'"
+            [bg]="'rgba(255,255,255,0.04)'"
+            [border]="'rgba(255,255,255,0.14)'"
+            [expandedMatrixId]="expandedMatrixId()"
+            [tasks]="list('COMPLETED')"
+            [connectedTo]="dropListIds"
+            (toggleMatrixExpand)="toggleMatrixExpand($event)"
+            (taskChanged)="onTaskChanged($event)"
+            (taskDeleted)="store.deleteTask($event)"
+            (datePickerRequested)="openDatePickerForTask($event)"
+            (drop)="onDrop($event)"
+          />
+        </div>
       </section>
 
       <app-task-editor
@@ -191,6 +212,24 @@ type ListsMap = Record<QuadrantId, Task[]>;
         margin-top: 2px;
       }
 
+      .inboxGrid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      @media (max-width: 980px) {
+        .inboxGrid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .inboxCol {
+        min-width: 0;
+      }
+
       .date-popover {
         position: fixed;
         top: 0;
@@ -213,7 +252,13 @@ export class MatrixPageComponent {
   // Which quadrant dominates the matrix (null means normal 2x2)
   expandedMatrixId = signal<Exclude<QuadrantId, 'UNCATEGORIZED'> | null>(null);
 
-  readonly dropListIds: string[] = [...this.quadrants.map((q) => q.id), 'UNCATEGORIZED'];
+  //completedTasks = computed(() => this.tasks.list().filter((t: { quadrantId: string; }) => t.quadrantId === 'COMPLETED'));
+
+  readonly dropListIds: string[] = [
+    ...this.quadrants.map((q) => q.id),
+    'UNCATEGORIZED',
+    'COMPLETED',
+  ];
   // Task editor modal state
   editorOpen = signal(false);
   editorQuadrant = signal<QuadrantId>('UNCATEGORIZED');
@@ -226,13 +271,13 @@ export class MatrixPageComponent {
   datePickerAnchor = signal<'date' | 'switch'>('date');
   private datePickerAnchorRect: DOMRect | null = null;
 
-  // Stable per-quadrant lists (critical for CDK drag/drop)
   private lists = signal<ListsMap>({
     DO_NOW: [],
     DO_LATER: [],
     DELEGATE: [],
     ELIMINATE: [],
     UNCATEGORIZED: [],
+    COMPLETED: [],
   });
 
   constructor(
@@ -353,6 +398,7 @@ export class MatrixPageComponent {
       DELEGATE: [],
       ELIMINATE: [],
       UNCATEGORIZED: [],
+      COMPLETED: [],
     };
     for (const t of tasks) next[t.quadrant].push(t);
 
@@ -365,7 +411,14 @@ export class MatrixPageComponent {
   }
 
   private getQuadrantFromDropId(dropId: string): QuadrantId {
-    const known: QuadrantId[] = ['DO_NOW', 'DO_LATER', 'DELEGATE', 'ELIMINATE', 'UNCATEGORIZED'];
+    const known: QuadrantId[] = [
+      'DO_NOW',
+      'DO_LATER',
+      'DELEGATE',
+      'ELIMINATE',
+      'UNCATEGORIZED',
+      'COMPLETED',
+    ];
     return known.includes(dropId as QuadrantId) ? (dropId as QuadrantId) : 'UNCATEGORIZED';
   }
 

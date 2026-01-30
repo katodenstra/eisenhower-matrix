@@ -35,11 +35,58 @@ export class TaskStoreService {
   }
 
   updateTask(id: string, patch: Partial<Task>): void {
-    const next = this.snapshot.map((t) => {
-      if (t.id !== id) return t;
-      return { ...t, ...patch, updatedAt: Date.now() };
-    });
-    this.set(next);
+    const list = this.snapshot;
+    const idx = list.findIndex((t) => t.id === id);
+    if (idx === -1) return;
+
+    const current = list[idx];
+    const next: Task = { ...current, ...patch };
+
+    const completedWasToggledOn = patch.completed === true && current.completed !== true;
+    const completedWasToggledOff = patch.completed === false && current.completed === true;
+
+    const quadrantWasChanged =
+      typeof patch.quadrant === 'string' && patch.quadrant !== current.quadrant;
+    const movedIntoCompleted = quadrantWasChanged && patch.quadrant === 'COMPLETED';
+    const movedOutOfCompleted =
+      quadrantWasChanged && current.quadrant === 'COMPLETED' && patch.quadrant !== 'COMPLETED';
+
+    // 1) Completing via checkbox from ANY quadrant:
+    if (completedWasToggledOn) {
+      if (current.quadrant !== 'COMPLETED') {
+        next.previousQuadrantId = current.quadrant;
+      }
+      next.quadrant = 'COMPLETED';
+      next.completed = true;
+    }
+
+    // 2) Un-completing via checkbox while inside COMPLETED:
+    if (completedWasToggledOff && current.quadrant === 'COMPLETED') {
+      next.quadrant = current.previousQuadrantId ?? 'UNCATEGORIZED';
+      next.previousQuadrantId = undefined;
+      next.completed = false;
+    }
+
+    // 3) Completing via DRAG/DROP into COMPLETED:
+    if (movedIntoCompleted) {
+      // preserve origin if we’re coming from a real quadrant
+      if (current.quadrant !== 'COMPLETED') {
+        next.previousQuadrantId = current.quadrant;
+      }
+      next.quadrant = 'COMPLETED';
+      next.completed = true;
+    }
+
+    // 4) Dragging OUT of COMPLETED => treat as “uncomplete”
+    if (movedOutOfCompleted) {
+      next.quadrant = patch.quadrant as QuadrantId;
+      next.completed = false;
+      next.previousQuadrantId = undefined;
+    }
+
+    const updated = [...list];
+    updated[idx] = next;
+    this.set(updated);
   }
 
   deleteTask(id: string): void {
@@ -81,7 +128,6 @@ export class TaskStoreService {
   }
 
   private seed(): Task[] {
-    // A tiny seed so the UI doesn't look dead on first run.
     const now = Date.now();
     return [
       {

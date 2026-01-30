@@ -14,7 +14,7 @@ type DayCell =
     @if (mode === 'modal') {
       <div class="backdrop" (pointerdown)="close.emit()">
         <section
-          class="panel"
+          class="panel-dp"
           (pointerdown)="$event.stopPropagation()"
           role="dialog"
           aria-modal="true"
@@ -55,7 +55,7 @@ type DayCell =
         </section>
       </div>
     } @else {
-      <section class="panel panel--popover" (click)="$event.stopPropagation()" role="dialog">
+      <section class="panel-dp panel--popover" (click)="$event.stopPropagation()" role="dialog">
         <header class="header">
           <button class="nav" type="button" (click)="prevMonth()" aria-label="Previous month">
             ‹
@@ -107,7 +107,7 @@ type DayCell =
         z-index: 9999;
       }
 
-      .panel {
+      .panel-dp {
         --cell: 44px;
         --gap: 10px;
         --pad: 14px;
@@ -118,7 +118,7 @@ type DayCell =
         min-width: calc(var(--pad) * 2 + (var(--cell) * 7) + (var(--gap) * 6));
         width: min(520px, 96vw);
 
-        background: rgba(35, 35, 35, 0.9);
+        background: rgb(28, 30, 36);
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         color: rgba(255, 255, 255, 0.92);

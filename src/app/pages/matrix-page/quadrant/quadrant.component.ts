@@ -32,15 +32,16 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 
         <div class="quad-actions">
           <!-- Hide + in shrunk state (the sketch shows expand-only controls) -->
-          <button
-            class="material-symbols-rounded"
-            (click)="newTask.emit()"
-            title="New task"
-            [class.hide-when-shrunk]="isShrunk"
-          >
-            add
-          </button>
-
+          @if (allowCreate) {
+            <button
+              class="material-symbols-rounded"
+              (click)="newTask.emit()"
+              title="New task"
+              [class.hide-when-shrunk]="isShrunk"
+            >
+              add
+            </button>
+          }
           <!-- Inbox doesn't participate in matrix expansion -->
           @if (!isInbox && quadrantId !== 'UNCATEGORIZED') {
             <button
@@ -237,6 +238,16 @@ import { TaskCardComponent } from '../task-card/task-card.component';
       .quad--inbox.quad--shrunk::after {
         opacity: 0;
       }
+
+      .quad--inbox {
+        --inbox-card-h: 92px;
+        --inbox-gap: 10px;
+      }
+
+      .quad--inbox .task-list {
+        flex: 0 1 auto;
+        max-height: calc((var(--inbox-card-h) * 3) + (var(--inbox-gap) * 2));
+      }
     `,
   ],
 })
@@ -250,6 +261,7 @@ export class QuadrantComponent {
   @Input() expandedMatrixId: Exclude<QuadrantId, 'UNCATEGORIZED'> | null = null;
   @Input() isInbox = false;
   @Input() connectedTo: string[] = [];
+  @Input() allowCreate = true;
 
   @Output() newTask = new EventEmitter<void>();
   @Output() toggleMatrixExpand = new EventEmitter<Exclude<QuadrantId, 'UNCATEGORIZED'>>();
