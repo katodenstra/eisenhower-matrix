@@ -136,9 +136,6 @@ type ListsMap = Record<QuadrantId, Task[]>;
         line-height: 1;
       }
 
-      /* MATRIX:
-       Give it a predictable height so quadrants can scroll internally.
-       Adjust the min() values if you want it taller/shorter. */
       .matrix {
         flex: 0 0 auto;
         padding: 16px 16px 10px;
@@ -155,7 +152,7 @@ type ListsMap = Record<QuadrantId, Task[]>;
 
         /* Use a variable so TS + CSS stay consistent */
         --grid-gap: 14px;
-        --strip: 86px;
+        --strip: 70px;
 
         gap: var(--grid-gap);
 

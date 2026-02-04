@@ -44,13 +44,15 @@ import { TaskCardComponent } from '../task-card/task-card.component';
           }
           <!-- Inbox doesn't participate in matrix expansion -->
           @if (!isInbox && quadrantId !== 'UNCATEGORIZED') {
-            <button
-              class="material-symbols-rounded"
-              (click)="onToggleMatrixExpand()"
-              [title]="isDominant ? 'Collapse' : 'Expand'"
-            >
-              {{ isDominant ? 'close_fullscreen' : 'open_in_full' }}
-            </button>
+            <div class="expand-btn-wrap">
+              <button
+                class="material-symbols-rounded expand-btn"
+                (click)="onToggleMatrixExpand()"
+                [title]="isDominant ? 'Collapse' : 'Expand'"
+              >
+                {{ isDominant ? 'close_fullscreen' : 'open_in_full' }}
+              </button>
+            </div>
           }
         </div>
       </header>
@@ -130,9 +132,27 @@ import { TaskCardComponent } from '../task-card/task-card.component';
       }
 
       .quad-actions {
+        align-items: center;
         display: flex;
         gap: 8px;
+        height: 40px;
       }
+
+      .expand-btn-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+      }
+
+      .expand-btn {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+      }
+
       .icon-btn {
         width: 40px;
         height: 40px;
@@ -146,6 +166,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 
       .hide-when-shrunk {
         transition: opacity 180ms ease;
+        display: none;
       }
 
       .task-card {
@@ -182,18 +203,37 @@ import { TaskCardComponent } from '../task-card/task-card.component';
         margin-top: 2px;
       }
 
-      /* Expanded quadrant: normal content, just more space from the grid */
       .quad--dominant {
         filter: saturate(1.02);
       }
 
-      /* Shrunk quadrants:
-       - Only show expand button
-       - Clip (no scaling)
-       - Fade out remaining content */
       .quad--shrunk {
         opacity: 0.95;
         filter: saturate(0.85);
+      }
+
+      .quad--shrunk .quad-header {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .quad--shrunk .quad-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        height: 100%;
+      }
+
+      .quad--shrunk .expand-btn-wrap {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .quad--shrunk .quad-meta,
@@ -201,14 +241,6 @@ import { TaskCardComponent } from '../task-card/task-card.component';
       .quad--shrunk .hide-when-shrunk {
         opacity: 0;
         pointer-events: none;
-      }
-
-      /* Keep expand button visible and anchored */
-      .quad--shrunk .expand-btn {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        z-index: 2;
       }
 
       /* Fade overlay (so it feels "pushed out" rather than "deleted") */
