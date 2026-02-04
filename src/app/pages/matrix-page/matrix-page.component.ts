@@ -308,6 +308,7 @@ export class MatrixPageComponent {
     title: string;
     quadrant: QuadrantId;
     dueDate?: string;
+    dueTime?: string;
     description?: string;
     tags: string[];
   }): void {

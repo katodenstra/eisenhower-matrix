@@ -12,6 +12,7 @@ export interface Task {
   description?: string;
   tags: string[];
   dueDate?: string; // YYYY-MM-DD
+  dueTime?: string; // HH:mm (24-hour format)
   completed: boolean;
   quadrant: QuadrantId;
   previousQuadrantId?: QuadrantId;

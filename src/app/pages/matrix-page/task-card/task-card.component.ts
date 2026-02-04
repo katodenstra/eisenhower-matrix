@@ -9,6 +9,7 @@ import {
   SimpleChanges,
   ViewChild,
   signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import {
   CdkDrag,
@@ -18,17 +19,42 @@ import {
   CdkDragHandle,
 } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 import { QUADRANTS, Task } from '../../../models/task.models';
 import { DragStateService } from '../../../services/drag-state.service';
+import { ANIMATION_TIMINGS, SIZES } from '../../../constants/constants';
 
 type Meridian = 'AM' | 'PM';
 type DatePickerAnchor = 'date' | 'switch';
 
+/**
+ * Task Card Component
+ *
+ * Displays a single task with interactive controls.
+ * Supports:
+ * - Completion toggle with visual feedback
+ * - Drag-and-drop reordering/moving to other quadrants
+ * - Task expansion for detailed view
+ * - Due date picking
+ * - Accessibility features (ARIA, keyboard support)
+ *
+ * Uses OnPush change detection for optimal performance
+ *
+ * @example
+ * ```html
+ * <app-task-card
+ *   [task]="task"
+ *   [accent]="borderColor"
+ *   (changed)="onTaskChanged($event)"
+ * />
+ * ```
+ */
 @Component({
   standalone: true,
   selector: 'app-task-card',
-  imports: [DragDropModule, CdkDrag, CdkDragHandle, FormsModule],
+  imports: [DragDropModule, CdkDrag, CdkDragHandle, FormsModule, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article
       class="card"
@@ -107,7 +133,7 @@ type DatePickerAnchor = 'date' | 'switch';
             <div class="due" [style.color]="accent">{{ task.dueDate }}</div>
           }
 
-          @if (task.tags?.length) {
+          @if (task.tags.length) {
             <div class="tags-inline">
               @for (tag of task.tags.slice(0, 3); track tag) {
                 <span class="tag-pill">{{ tag }}</span>

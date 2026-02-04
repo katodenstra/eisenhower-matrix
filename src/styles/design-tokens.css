@@ -1,0 +1,153 @@
+/**
+ * Design System Tokens
+ * Centralized design values for consistent styling across the application
+ */
+
+:root {
+  /* ===== SPACING SCALE (8px base unit) ===== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+  /* ===== TYPOGRAPHY SCALE ===== */
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 28px;
+
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ===== BORDER RADIUS SCALE ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* ===== SHADOWS / ELEVATION ===== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+
+  /* ===== ANIMATIONS & TRANSITIONS ===== */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-smooth: 220ms ease;
+  --transition-slow: 300ms ease;
+
+  --easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-elastic: cubic-bezier(0.2, 0.85, 0.2, 1);
+
+  /* ===== GRID ANIMATION ===== */
+  --grid-transition:
+    grid-template-columns 420ms var(--easing-elastic),
+    grid-template-rows 420ms var(--easing-elastic);
+
+  /* ===== INTERACTION SIZES ===== */
+  --touch-target-size: 44px;
+  --icon-btn-size: 40px;
+  --focus-outline-width: 2px;
+  --focus-outline-offset: 2px;
+
+  /* ===== QUADRANT COLORS ===== */
+  --quadrant-do-now-bg: #2fc06a1a;
+  --quadrant-do-now-border: #2fc06a;
+
+  --quadrant-do-later-bg: #4aa3ff1a;
+  --quadrant-do-later-border: #4aa3ff;
+
+  --quadrant-delegate-bg: #f2c94c1a;
+  --quadrant-delegate-border: #f2c94c;
+
+  --quadrant-eliminate-bg: #ff5c5c1a;
+  --quadrant-eliminate-border: #ff5c5c;
+
+  /* ===== SEMANTIC COLORS ===== */
+  --color-bg-transparent: rgba(255, 255, 255, 0.02);
+  --color-border-light: rgba(255, 255, 255, 0.14);
+  --color-border-lighter: rgba(255, 255, 255, 0.18);
+  --color-border-subtle: rgba(255, 255, 255, 0.22);
+
+  --color-bg-button-hover: rgba(255, 255, 255, 0.08);
+  --color-bg-button-active: rgba(255, 255, 255, 0.12);
+
+  --color-opacity-disabled: 0.5;
+  --color-opacity-muted: 0.75;
+  --color-opacity-secondary: 0.8;
+
+  /* ===== FILTER EFFECTS ===== */
+  --filter-dominant: saturate(1.02);
+  --filter-shrunk: saturate(0.85);
+  --filter-opacity-shrunk: 0.95;
+
+  /* ===== Z-INDEX SCALE ===== */
+  --z-base: 0;
+  --z-elevated: 1;
+  --z-modal: 10;
+  --z-popover: 20;
+  --z-tooltip: 30;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-smooth: 0ms;
+    --transition-slow: 0ms;
+    --grid-transition: none;
+  }
+}
+
+/* ===== REUSABLE COMPONENT STYLES ===== */
+
+.icon-btn {
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  padding: 0;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  transition: background var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background: var(--color-bg-button-hover);
+}
+
+.icon-btn:active {
+  background: var(--color-bg-button-active);
+  transform: translateY(1px);
+}
+
+.icon-btn:focus-visible {
+  outline: var(--focus-outline-width) solid currentColor;
+  outline-offset: var(--focus-outline-offset);
+}
+
+.icon-btn:disabled {
+  opacity: var(--color-opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}

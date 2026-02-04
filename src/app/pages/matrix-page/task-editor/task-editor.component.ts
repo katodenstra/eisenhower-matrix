@@ -7,6 +7,7 @@ import {
   Output,
   ViewChild,
   signal,
+  computed,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuadrantId } from '../../../models/task.models';
@@ -26,30 +27,80 @@ import { DatePickerComponent } from '../../../components/date-picker/date-picker
                 Quadrant: <b>{{ quadrant }}</b>
               </div>
             </div>
-            <button class="mini" (click)="close.emit()">✕</button>
+            <button class="mini" (click)="closeDialog()">✕</button>
           </header>
 
           <div class="body">
             <div class="field">
               <label>Task name</label>
-              <input [(ngModel)]="title" placeholder="e.g., conquer the day" />
+              <input
+                [(ngModel)]="title"
+                placeholder="e.g., conquer the day"
+                autofocus
+                tabindex="1"
+              />
             </div>
 
-            <button class="collapser" (click)="showOptions.set(!showOptions())">
+            <button
+              type="button"
+              class="collapser"
+              (click)="showOptions.set(!showOptions())"
+              tabindex="2"
+            >
               {{ showOptions() ? 'Hide options' : 'More options' }}
             </button>
 
             @if (showOptions()) {
               <div class="options">
                 <div class="field">
-                  <label>Due date (optional)</label>
+                  <label>Due date & time (optional)</label>
                   <div class="date-field" #dateField>
                     <div class="date-row">
-                      <button type="button" class="date-btn" (click)="openDatePicker()">
+                      <button
+                        type="button"
+                        class="date-btn"
+                        (click)="openDatePicker()"
+                        tabindex="3"
+                      >
                         {{ dueDate || 'Select date' }}
                       </button>
                       @if (dueDate) {
-                        <button type="button" class="date-clear" (click)="clearDate()">Clear</button>
+                        <button type="button" class="date-clear" (click)="clearDate()">
+                          Clear
+                        </button>
+                      }
+                      @if (dueDate) {
+                        <div class="time-picker-inline">
+                          <input
+                            class="time-input-field"
+                            type="text"
+                            maxlength="2"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            [(ngModel)]="timeHourStr"
+                            (ngModelChange)="validateHour()"
+                            aria-label="Hour"
+                          />
+                          <span class="time-sep">:</span>
+                          <input
+                            class="time-input-field"
+                            type="text"
+                            maxlength="2"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            [(ngModel)]="timeMinuteStr"
+                            (ngModelChange)="validateMinute()"
+                            aria-label="Minutes"
+                          />
+                          <select
+                            class="time-meridian"
+                            [(ngModel)]="timeMeridian"
+                            aria-label="AM/PM"
+                          >
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                          </select>
+                        </div>
                       }
                     </div>
 
@@ -71,25 +122,25 @@ import { DatePickerComponent } from '../../../components/date-picker/date-picker
                     rows="6"
                     [(ngModel)]="description"
                     placeholder="Add context..."
+                    tabindex="4"
                   ></textarea>
                 </div>
 
                 <div class="field">
                   <label>Tags (comma separated)</label>
-                  <input [(ngModel)]="tagsRaw" placeholder="work, personal, admin" />
+                  <input [(ngModel)]="tagsRaw" placeholder="work, personal, admin" tabindex="5" />
                 </div>
               </div>
             }
 
             <div class="footer">
-              <button (click)="close.emit()">Cancel</button>
-              <button (click)="submit()" [disabled]="!title.trim()">Create</button>
+              <button (click)="closeDialog()" tabindex="6">Cancel</button>
+              <button (click)="submit()" [disabled]="!title.trim()" tabindex="7">Create</button>
             </div>
           </div>
         </div>
       </div>
     }
-
   `,
   styles: [
     `
@@ -191,6 +242,91 @@ import { DatePickerComponent } from '../../../components/date-picker/date-picker
         background: rgba(255, 255, 255, 0.1);
       }
 
+      .time-input {
+        height: 40px;
+        width: 120px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: inherit;
+        padding: 0 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .time-input:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .time-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      .time-picker-inline {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 40px;
+        padding: 0 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .time-input-field {
+        width: 40px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .time-input-field:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+      }
+
+      .time-input-field::-webkit-outer-spin-button,
+      .time-input-field::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .time-input-field[type='number'] {
+        -moz-appearance: textfield;
+      }
+
+      .time-sep {
+        font-weight: 600;
+        opacity: 0.6;
+      }
+
+      .time-meridian {
+        width: 65px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 0 6px;
+        cursor: pointer;
+      }
+
+      .time-meridian:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+      }
+
       .date-clear {
         height: 40px;
         border-radius: 12px;
@@ -228,6 +364,7 @@ export class TaskEditorComponent {
     title: string;
     quadrant: QuadrantId;
     dueDate?: string;
+    dueTime?: string;
     description?: string;
     tags: string[];
   }>();
@@ -238,11 +375,30 @@ export class TaskEditorComponent {
   description = '';
   tagsRaw = '';
 
+  timeHourStr = '12';
+  timeMinuteStr = '00';
+  timeMeridian: 'AM' | 'PM' = 'AM';
+
   showOptions = signal(false);
   datePickerOpen = signal(false);
 
   openDatePicker(): void {
     this.datePickerOpen.set(true);
+  }
+
+  closeDialog(): void {
+    this.resetForm();
+    this.close.emit();
+  }
+
+  private resetForm(): void {
+    this.title = '';
+    this.dueDate = '';
+    this.description = '';
+    this.tagsRaw = '';
+    this.resetTime();
+    this.showOptions.set(false);
+    this.datePickerOpen.set(false);
   }
 
   onDatePicked(iso: string): void {
@@ -252,6 +408,54 @@ export class TaskEditorComponent {
 
   clearDate(): void {
     this.dueDate = '';
+    this.resetTime();
+  }
+
+  private resetTime(): void {
+    this.timeHourStr = '12';
+    this.timeMinuteStr = '00';
+    this.timeMeridian = 'AM';
+  }
+
+  validateHour(): void {
+    let num = parseInt(this.timeHourStr, 10);
+    if (isNaN(num) || this.timeHourStr === '') {
+      this.timeHourStr = '12';
+      return;
+    }
+    if (num < 1) num = 1;
+    if (num > 12) num = 12;
+    this.timeHourStr = String(num).padStart(2, '0');
+  }
+
+  validateMinute(): void {
+    let num = parseInt(this.timeMinuteStr, 10);
+    if (isNaN(num) || this.timeMinuteStr === '') {
+      this.timeMinuteStr = '00';
+      return;
+    }
+    if (num < 0) num = 0;
+    if (num > 59) num = 59;
+    this.timeMinuteStr = String(num).padStart(2, '0');
+  }
+
+  private buildDueTime(): string | undefined {
+    const hour12 = parseInt(this.timeHourStr, 10);
+    const minute = parseInt(this.timeMinuteStr, 10);
+
+    if (isNaN(hour12) || isNaN(minute)) return undefined;
+
+    // Convert 12-hour to 24-hour format
+    let hour24 = hour12;
+    if (this.timeMeridian === 'PM' && hour12 !== 12) {
+      hour24 += 12;
+    } else if (this.timeMeridian === 'AM' && hour12 === 12) {
+      hour24 = 0;
+    }
+
+    const h = String(hour24).padStart(2, '0');
+    const m = String(minute).padStart(2, '0');
+    return `${h}:${m}`;
   }
 
   @HostListener('document:click', ['$event'])
@@ -273,6 +477,7 @@ export class TaskEditorComponent {
       title: this.title.trim(),
       quadrant: this.quadrant,
       dueDate: this.dueDate?.trim() ? this.dueDate : undefined,
+      dueTime: this.buildDueTime(),
       description: this.description?.trim() ? this.description.trim() : undefined,
       tags,
     });
@@ -282,6 +487,7 @@ export class TaskEditorComponent {
     this.dueDate = '';
     this.description = '';
     this.tagsRaw = '';
+    this.resetTime();
     this.showOptions.set(false);
     this.datePickerOpen.set(false);
   }
