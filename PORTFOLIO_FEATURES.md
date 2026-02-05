@@ -7,6 +7,7 @@ This Eisenhower Matrix application showcases modern web development practices by
 ### Key Features Implemented
 
 #### 1. IndexedDB Service (`src/app/services/indexed-db.service.ts`)
+
 - **Transaction-based CRUD operations**: All database operations use IDBTransaction for data consistency
 - **Type-safe generics**: Leverages TypeScript generics for compile-time type safety
 - **Automatic schema versioning**: IndexedDB automatically handles database version management
@@ -17,6 +18,7 @@ This Eisenhower Matrix application showcases modern web development practices by
   - Indexes: `quadrant` and `completed` for optimized queries
 
 #### 2. Task Store Service Enhancement (`src/app/services/task-store.service.ts`)
+
 - **Async initialization**: Non-blocking initialization with `Promise`-based operations
 - **Dual persistence**: Primary IndexedDB with localStorage fallback
 - **Reactive signals**: Uses Angular's new `signal()` API for state management
@@ -27,6 +29,7 @@ This Eisenhower Matrix application showcases modern web development practices by
 #### 3. Professional UX with Skeleton Loaders
 
 ##### Loading Overlay (`src/app/pages/matrix-page/matrix-page.component.ts`)
+
 - Full-screen backdrop with semi-transparent dark background
 - Backdrop blur effect (4px) for modern glassmorphism
 - Spinner badge with pulsing dot animation
@@ -34,6 +37,7 @@ This Eisenhower Matrix application showcases modern web development practices by
 - Automatically hidden when `store.loading()` becomes false
 
 ##### Syncing Badge
+
 - Fixed position bottom-right corner
 - Shows "Syncing..." status with pulsing dot
 - Slide-in animation (200ms ease-out) from right
@@ -41,6 +45,7 @@ This Eisenhower Matrix application showcases modern web development practices by
 - Automatically manages visibility based on `store.syncing()` signal
 
 ##### Skeleton Loader Styles (`src/styles/skeleton-loader.css`)
+
 - Shimmer effect with gradient animation (2s infinite loop)
 - Placeholder elements for:
   - Task cards (title, expand button, due date, tags)
@@ -111,6 +116,7 @@ This Eisenhower Matrix application showcases modern web development practices by
 ### Portfolio Value
 
 This implementation demonstrates:
+
 - ✅ Modern browser APIs (IndexedDB)
 - ✅ Advanced Angular concepts (Signals, Async/Await, Dependency Injection)
 - ✅ Professional UX patterns (Skeleton screens, Loading states)

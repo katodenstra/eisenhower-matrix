@@ -314,7 +314,8 @@ type ListsMap = Record<QuadrantId, Task[]>;
         to {
           opacity: 1;
         }
-      }    `,
+      }
+    `,
   ],
 })
 export class MatrixPageComponent {

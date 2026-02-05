@@ -25,7 +25,7 @@ import { formatDateDDMMYYYY } from '../../../constants/constants';
             <div>
               <div class="title">New task</div>
               <div class="sub">
-                Quadrant: <b>{{ quadrant }}</b>
+                Quadrant: <b>{{ formatQuadrantLabel(quadrant) }}</b>
               </div>
             </div>
             <button class="mini" (click)="closeDialog()">✕</button>
@@ -388,6 +388,10 @@ export class TaskEditorComponent {
 
   openDatePicker(): void {
     this.datePickerOpen.set(true);
+  }
+
+  formatQuadrantLabel(value: QuadrantId): string {
+    return value.replace(/_/g, ' ');
   }
 
   closeDialog(): void {

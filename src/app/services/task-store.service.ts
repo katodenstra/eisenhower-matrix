@@ -272,10 +272,175 @@ export class TaskStoreService {
   private seed(): Task[] {
     const now = Date.now();
     return [
+      // DO_NOW - Urgent & Important (Red)
       {
         id: 'seed_1',
+        title: 'Fix critical bug in production',
+        description: 'Production is down, customers are waiting. This needs immediate attention.',
+        tags: ['urgent', 'bug', 'production'],
+        dueDate: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 days ago
+        dueTime: '09:00',
+        completed: false,
+        quadrant: 'DO_NOW',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_2',
+        title: 'Pay rent',
+        description: 'Monthly rent payment due. Set reminder for automatic transfer.',
+        tags: ['money', 'recurring'],
+        dueDate: new Date(now + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DO_NOW',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_3',
+        title: 'Client meeting - Project kickoff',
+        description: 'Discuss project requirements and timeline with the client team.',
+        tags: ['meeting', 'client', 'important'],
+        dueDate: new Date(now + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
+        dueTime: '14:00',
+        completed: false,
+        quadrant: 'DO_NOW',
+        createdAt: now,
+        updatedAt: now,
+      },
+
+      // DO_LATER - Not Urgent but Important (Blue)
+      {
+        id: 'seed_4',
+        title: 'Learn TypeScript advanced patterns',
+        description: 'Deep dive into generics, decorators, and utility types. Invest in skills.',
+        tags: ['learning', 'development'],
+        dueDate: new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 weeks
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DO_LATER',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_5',
+        title: 'Refactor authentication module',
+        description: 'Update to OAuth2 with proper token refresh handling.',
+        tags: ['refactor', 'security'],
+        dueDate: new Date(now + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 weeks
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DO_LATER',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_6',
+        title: 'Plan vacation for Q2',
+        description: 'Research destinations, check flight prices, book accommodations.',
+        tags: ['personal', 'planning'],
+        dueDate: new Date(now + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 months
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DO_LATER',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_7',
+        title: 'Update portfolio with latest projects',
+        description: 'Add IndexedDB project, update skills section, refresh testimonials.',
+        tags: ['career', 'portfolio'],
+        dueDate: new Date(now + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 10 days
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DO_LATER',
+        createdAt: now,
+        updatedAt: now,
+      },
+
+      // DELEGATE - Urgent but Not Important (Yellow)
+      {
+        id: 'seed_8',
+        title: 'Review junior dev pull requests',
+        description: 'Code review for the features branch. Assign feedback and approval.',
+        tags: ['review', 'team'],
+        dueDate: new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 days
+        dueTime: '10:00',
+        completed: false,
+        quadrant: 'DELEGATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_9',
+        title: 'Prepare expense report',
+        description: 'Compile receipts and submit monthly expenses for reimbursement.',
+        tags: ['admin', 'finance'],
+        dueDate: new Date(now + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DELEGATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_10',
+        title: 'Schedule team building event',
+        description: 'Book venue, send invitations, arrange catering.',
+        tags: ['team', 'event'],
+        dueDate: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'DELEGATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+
+      // ELIMINATE - Not Urgent & Not Important (Gray)
+      {
+        id: 'seed_11',
+        title: 'Organize computer files',
+        description: 'Clean up Downloads folder, organize project directories.',
+        tags: ['maintenance'],
+        dueDate: undefined,
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'ELIMINATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_12',
+        title: 'Reply to old emails',
+        description: 'Go through archived emails and respond to pending items.',
+        tags: ['communication'],
+        dueDate: undefined,
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'ELIMINATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: 'seed_13',
+        title: 'Reorganize bookshelf',
+        description: 'Alphabetize books or arrange by category.',
+        tags: ['personal', 'optional'],
+        dueDate: undefined,
+        dueTime: undefined,
+        completed: false,
+        quadrant: 'ELIMINATE',
+        createdAt: now,
+        updatedAt: now,
+      },
+
+      // UNCATEGORIZED - Demo task
+      {
+        id: 'seed_14',
         title: 'Drag me to a different quadrant',
-        description: 'I’m a task. I move. Much like your deadlines.',
+        description: 'I am a task. I move. Much like your deadlines. Drag me to categorize!',
         tags: ['demo'],
         dueDate: undefined,
         dueTime: undefined,
@@ -284,15 +449,17 @@ export class TaskStoreService {
         createdAt: now,
         updatedAt: now,
       },
+
+      // COMPLETED - Show a completed example
       {
-        id: 'seed_2',
-        title: 'Pay rent',
-        description: 'A timeless classic.',
-        tags: ['money'],
-        dueDate: undefined,
+        id: 'seed_15',
+        title: 'Deploy version 2.0 to production',
+        description: 'Released successfully with all features working as expected.',
+        tags: ['deployment', 'milestone'],
+        dueDate: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days ago
         dueTime: undefined,
-        completed: false,
-        quadrant: 'DO_NOW',
+        completed: true,
+        quadrant: 'COMPLETED',
         createdAt: now,
         updatedAt: now,
       },
