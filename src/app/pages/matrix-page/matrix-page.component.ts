@@ -129,6 +129,14 @@ type ListsMap = Record<QuadrantId, Task[]>;
           (close)="closeDatePicker()"
         />
       }
+
+      <!-- SYNCING INDICATOR -->
+      @if (store.syncing()) {
+        <div class="syncing-badge">
+          <span class="skeleton-loading-dot"></span>
+          Syncing...
+        </div>
+      }
     </div>
   `,
   styles: [
@@ -268,6 +276,35 @@ type ListsMap = Record<QuadrantId, Task[]>;
         display: flex;
         gap: 12px;
         align-items: center;
+      }
+
+      .syncing-badge {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(100, 200, 255, 0.1);
+        border: 1px solid rgba(100, 200, 255, 0.3);
+        border-radius: 20px;
+        font-size: 12px;
+        color: rgba(100, 200, 255, 0.8);
+        backdrop-filter: blur(8px);
+        animation: slideIn 200ms ease-out;
+        z-index: 1000;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(200px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
       }
 
       @keyframes fadeIn {
