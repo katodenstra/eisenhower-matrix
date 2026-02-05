@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Task, QuadrantId } from '../models/task.models';
 import { IdService } from './id.service';
+import { IndexedDbService } from './indexed-db.service';
 import { STORAGE_KEYS } from '../constants/constants';
 
 /**
@@ -11,8 +12,9 @@ import { STORAGE_KEYS } from '../constants/constants';
  * Handles:
  * - Task CRUD operations
  * - Task state transitions (completion, quadrant movement)
- * - LocalStorage persistence
+ * - IndexedDB persistence with localStorage fallback
  * - Observable stream for reactive updates
+ * - Loading and syncing state signals for skeleton screens
  *
  * Important: Always maintains referential integrity for tasks within each quadrant
  * to ensure CDK drag-drop functionality works correctly.
@@ -20,10 +22,50 @@ import { STORAGE_KEYS } from '../constants/constants';
 @Injectable({ providedIn: 'root' })
 export class TaskStoreService {
   /** Observable stream of task list changes */
-  private readonly _tasks$ = new BehaviorSubject<Task[]>(this.load());
+  private readonly _tasks$ = new BehaviorSubject<Task[]>([]);
   readonly tasks$ = this._tasks$.asObservable();
 
-  constructor(private ids: IdService) {}
+  /** Loading state for skeleton screens */
+  loading = signal(false);
+
+  /** Syncing state for persisting changes */
+  syncing = signal(false);
+
+  constructor(
+    private ids: IdService,
+    private db: IndexedDbService,
+  ) {
+    this.initializeStore();
+  }
+
+  /**
+   * Initialize the store by loading from IndexedDB or falling back to localStorage
+   * @private
+   */
+  private async initializeStore(): Promise<void> {
+    this.loading.set(true);
+    try {
+      await this.db.init();
+      const tasks = await this.db.getAllTasks();
+
+      if (tasks.length === 0) {
+        // If IndexedDB is empty, seed with demo data
+        const seedTasks = this.seed();
+        for (const task of seedTasks) {
+          await this.db.addTask(task);
+        }
+        this._tasks$.next(seedTasks);
+      } else {
+        this._tasks$.next(tasks);
+      }
+    } catch (error) {
+      console.error('Failed to initialize IndexedDB, falling back to localStorage:', error);
+      // Fallback to localStorage
+      this._tasks$.next(this.loadFromLocalStorage());
+    } finally {
+      this.loading.set(false);
+    }
+  }
 
   /**
    * Get the current snapshot of all tasks
@@ -174,19 +216,33 @@ export class TaskStoreService {
   }
 
   /**
-   * Internal: Update the task list and persist to storage
+   * Internal: Update the task list and persist to both stores
    * @private
    */
-  private set(tasks: Task[]): void {
+  private async set(tasks: Task[]): Promise<void> {
     this._tasks$.next(tasks);
-    this.save(tasks);
+    this.syncing.set(true);
+    try {
+      // Persist to IndexedDB
+      for (const task of tasks) {
+        await this.db.updateTask(task);
+      }
+      // Also update localStorage as fallback
+      this.saveToLocalStorage(tasks);
+    } catch (error) {
+      console.error('Failed to sync to IndexedDB:', error);
+      // Still update localStorage as fallback
+      this.saveToLocalStorage(tasks);
+    } finally {
+      this.syncing.set(false);
+    }
   }
 
   /**
    * Internal: Load tasks from localStorage or return seed data
    * @private
    */
-  private load(): Task[] {
+  private loadFromLocalStorage(): Task[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.TASKS);
       if (!raw) return this.seed();
@@ -201,8 +257,12 @@ export class TaskStoreService {
    * Internal: Save tasks to localStorage
    * @private
    */
-  private save(tasks: Task[]): void {
-    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+  private saveToLocalStorage(tasks: Task[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+    }
   }
 
   /**
@@ -218,6 +278,7 @@ export class TaskStoreService {
         description: 'I’m a task. I move. Much like your deadlines.',
         tags: ['demo'],
         dueDate: undefined,
+        dueTime: undefined,
         completed: false,
         quadrant: 'UNCATEGORIZED',
         createdAt: now,
@@ -229,6 +290,7 @@ export class TaskStoreService {
         description: 'A timeless classic.',
         tags: ['money'],
         dueDate: undefined,
+        dueTime: undefined,
         completed: false,
         quadrant: 'DO_NOW',
         createdAt: now,
