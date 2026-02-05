@@ -23,7 +23,7 @@ import { CommonModule } from '@angular/common';
 
 import { QUADRANTS, Task } from '../../../models/task.models';
 import { DragStateService } from '../../../services/drag-state.service';
-import { ANIMATION_TIMINGS, SIZES } from '../../../constants/constants';
+import { ANIMATION_TIMINGS, SIZES, formatDateDDMMYYYY } from '../../../constants/constants';
 
 type Meridian = 'AM' | 'PM';
 type DatePickerAnchor = 'date' | 'switch';
@@ -130,7 +130,7 @@ type DatePickerAnchor = 'date' | 'switch';
       <div class="meta">
         <div class="meta-inner">
           @if (task.dueDate) {
-            <div class="due" [style.color]="accent">{{ task.dueDate }}</div>
+            <div class="due" [style.color]="accent">{{ formatDateDDMMYYYY(task.dueDate) }}</div>
           }
 
           @if (task.tags.length) {
@@ -166,7 +166,7 @@ type DatePickerAnchor = 'date' | 'switch';
                     (click)="openDatePicker('date', $event)"
                     [attr.aria-label]="task.dueDate ? 'Change due date' : 'Set due date'"
                   >
-                    {{ task.dueDate ?? '' }}
+                    {{ formatDateDDMMYYYY(task.dueDate) }}
                   </button>
                 </div>
               </div>
@@ -743,6 +743,9 @@ export class TaskCardComponent implements OnChanges {
 
   addingTag = signal(false);
   newTag = signal('');
+
+  // Expose date formatter for template
+  formatDateDDMMYYYY = formatDateDDMMYYYY;
 
   constructor(private dragState: DragStateService) {}
 

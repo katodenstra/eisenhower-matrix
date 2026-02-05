@@ -133,3 +133,17 @@ export const FEATURES = {
   ENABLE_ANIMATIONS: true,
   DEBUG_LOGS: false,
 } as const;
+
+// ===== DATE FORMATTING =====
+/**
+ * Formats an ISO date string (YYYY-MM-DD) to dd/mm/yyyy format
+ * @param dateStr - Date string in YYYY-MM-DD format
+ * @returns Formatted date string in dd/mm/yyyy format, or empty string if invalid
+ */
+export function formatDateDDMMYYYY(dateStr: string | undefined): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return '';
+  const [year, month, day] = parts;
+  return `${day}/${month}/${year}`;
+}

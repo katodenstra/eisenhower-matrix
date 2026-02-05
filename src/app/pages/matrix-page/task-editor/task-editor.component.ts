@@ -12,6 +12,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { QuadrantId } from '../../../models/task.models';
 import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
+import { formatDateDDMMYYYY } from '../../../constants/constants';
 
 @Component({
   standalone: true,
@@ -62,7 +63,7 @@ import { DatePickerComponent } from '../../../components/date-picker/date-picker
                         (click)="openDatePicker()"
                         tabindex="3"
                       >
-                        {{ dueDate || 'Select date' }}
+                        {{ formatDateDDMMYYYY(dueDate) || 'Select date' }}
                       </button>
                       @if (dueDate) {
                         <button type="button" class="date-clear" (click)="clearDate()">
@@ -377,6 +378,9 @@ export class TaskEditorComponent {
 
   timeHourStr = '12';
   timeMinuteStr = '00';
+
+  // Expose date formatter for template
+  formatDateDDMMYYYY = formatDateDDMMYYYY;
   timeMeridian: 'AM' | 'PM' = 'AM';
 
   showOptions = signal(false);
