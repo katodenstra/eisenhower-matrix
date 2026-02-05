@@ -189,6 +189,7 @@ type NavLink = {
         font-weight: 900;
         background: rgba(74, 163, 255, 0.14);
         border-color: rgba(74, 163, 255, 0.22);
+        transition: none !important;
       }
 
       .brand-logo-img {
@@ -455,7 +456,6 @@ type NavLink = {
 export class SideNavComponent {
   open = signal(false);
 
-  // ✅ These now emit events instead of “scroll somewhere and hope”
   taskLinks: NavLink[] = [
     { label: 'Do now', icon: 'flash_on', action: 'DO_NOW' },
     { label: 'Do later', icon: 'schedule', action: 'DO_LATER' },
