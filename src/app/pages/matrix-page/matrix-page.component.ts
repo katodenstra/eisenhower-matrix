@@ -28,6 +28,18 @@ type ListsMap = Record<QuadrantId, Task[]>;
   imports: [DragDropModule, NgStyle, QuadrantComponent, TaskEditorComponent, DatePickerComponent],
   template: `
     <div class="page">
+      <!-- LOADING OVERLAY -->
+      @if (store.loading()) {
+        <div class="loading-overlay">
+          <div class="loading-spinner">
+            <span class="skeleton-loading-badge">
+              <span class="skeleton-loading-dot"></span>
+              Loading your tasks from database...
+            </span>
+          </div>
+        </div>
+      }
+
       <!-- MATRIX FIRST -->
       <section class="matrix">
         <div class="matrix-grid-wrap">
@@ -240,7 +252,32 @@ type ListsMap = Record<QuadrantId, Task[]>;
         z-index: 999; /* must be BELOW the popover (1000) */
         background: transparent; /* invisible but clickable */
       }
-    `,
+      /* Loading Overlay */
+      .loading-overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(15, 17, 21, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        animation: fadeIn 200ms ease-out;
+      }
+
+      .loading-spinner {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }    `,
   ],
 })
 export class MatrixPageComponent {
