@@ -6,6 +6,7 @@ export type MatrixTarget =
   | 'DO_LATER'
   | 'DELEGATE'
   | 'ELIMINATE'
+  | 'GRID_VIEW'
   | 'UNCATEGORIZED'
   | 'COMPLETED';
 

@@ -107,6 +107,7 @@ import { KEYBOARD } from '../../../constants/constants';
             [task]="t"
             [accent]="border"
             (changed)="taskChanged.emit($event)"
+            (deleteRequested)="taskDeleteRequested.emit($event)"
             (datePickerRequested)="datePickerRequested.emit($event)"
           />
         }
@@ -358,6 +359,9 @@ export class QuadrantComponent {
 
   /** Emitted when a task is deleted */
   @Output() taskDeleted = new EventEmitter<string>();
+
+  /** Emitted when a task requests deletion (for confirmation) */
+  @Output() taskDeleteRequested = new EventEmitter<{ id: string; title: string }>();
 
   /** Emitted when a task is dropped (drag-drop) */
   @Output() drop = new EventEmitter<CdkDragDrop<Task[]>>();

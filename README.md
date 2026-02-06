@@ -5,8 +5,8 @@ This project is a UX-forward take on the Eisenhower priority matrix. It focuses 
 What it demonstrates from a UX engineering lens:
 
 - Information architecture: 4-quadrant prioritization with a dedicated "Uncategorized" inbox and a Completed lane.
-- Interaction design: drag-and-drop across quadrants, reorder within a list, and expand/collapse task details.
-- Progressive disclosure: compact task cards with optional detail panels, date/time affordances, and inline editing.
+- Interaction design: drag-and-drop across quadrants, reorder within a list, expand/collapse task details, and a one-tap grid reset.
+- Progressive disclosure: compact task cards with optional detail panels, date/time affordances, inline editing, and a confirm-before-delete flow.
 - Motion and feedback: animated transitions for quadrant expansion, task reveals, and syncing states.
 - Resilience and continuity: local persistence (IndexedDB with localStorage fallback) to preserve work.
 - Accessibility considerations: semantic structure, ARIA labels, and keyboard-safe behaviors.

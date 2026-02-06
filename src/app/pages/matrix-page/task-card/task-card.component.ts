@@ -81,14 +81,30 @@ type DatePickerAnchor = 'date' | 'switch';
 
         <!-- title -->
         <div class="title-wrap">
-          <div
-            class="title"
+          <input
+            #titleField
+            class="title-input"
             [class.title--done]="task.completed && !isCompletedQuadrant()"
             [class.title--completed]="isCompletedQuadrant()"
-          >
-            {{ task.title }}
-          </div>
+            [class.title-input--editable]="expanded()"
+            [readOnly]="!expanded()"
+            [attr.tabindex]="expanded() ? 0 : -1"
+            [(ngModel)]="titleDraft"
+            (focus)="onTitleFocus()"
+            (blur)="onTitleBlur()"
+            aria-label="Task title"
+          />
         </div>
+
+        <button
+          type="button"
+          class="delete-action"
+          (click)="requestDelete($event)"
+          aria-label="Delete task"
+          title="Delete task"
+        >
+          <span class="material-symbols-rounded">delete</span>
+        </button>
 
         <!-- expand button - changes to color dot when task is in COMPLETED -->
         @if (isCompletedQuadrant()) {
@@ -283,7 +299,7 @@ type DatePickerAnchor = 'date' | 'switch';
                   Add tag
                 </button>
               } @else {
-                <div class="tag-editor" (click)="$event.stopPropagation()">
+                <div #tagEditor class="tag-editor" (click)="$event.stopPropagation()">
                   <input
                     class="tag-input"
                     type="text"
@@ -321,7 +337,7 @@ type DatePickerAnchor = 'date' | 'switch';
 
       .header {
         display: grid;
-        grid-template-columns: auto 1fr auto auto;
+        grid-template-columns: auto 1fr auto auto auto;
         align-items: center;
         gap: 10px;
       }
@@ -370,6 +386,29 @@ type DatePickerAnchor = 'date' | 'switch';
         font-weight: 700;
       }
 
+      .title-input {
+        width: 90%;
+        min-width: 0;
+        height: 40px;
+        font: inherit;
+        font-weight: 800;
+        font-size: 18px;
+        color: inherit;
+        background: transparent;
+        border: 1px solid transparent;
+        padding: 0 12px;
+        margin: 0;
+        outline: none;
+        border-radius: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .title-input--editable:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
       .origin-dot {
         width: 12px;
         height: 12px;
@@ -380,7 +419,8 @@ type DatePickerAnchor = 'date' | 'switch';
       }
 
       .expand,
-      .drag-handle {
+      .drag-handle,
+      .delete-action {
         width: 40px;
         height: 40px;
         padding: 0;
@@ -389,7 +429,7 @@ type DatePickerAnchor = 'date' | 'switch';
         place-items: center;
         background: rgba(255, 255, 255, 0.08);
         color: inherit;
-        border: 0;
+        border: 1px solid transparent;
         cursor: pointer;
         transition:
           background 120ms ease,
@@ -399,8 +439,10 @@ type DatePickerAnchor = 'date' | 'switch';
       .drag-handle:hover {
         background: rgba(255, 255, 255, 0.12);
       }
+
       .expand:active,
-      .drag-handle:active {
+      .drag-handle:active,
+      .delete-action:active {
         transform: translateY(1px);
       }
 
@@ -410,6 +452,11 @@ type DatePickerAnchor = 'date' | 'switch';
       }
       .drag-handle:active {
         cursor: grabbing;
+      }
+
+      .delete-action:hover {
+        border-color: rgba(255, 92, 92, 0.6);
+        background: rgba(255, 92, 92, 0.15);
       }
 
       .meta {
@@ -652,7 +699,7 @@ type DatePickerAnchor = 'date' | 'switch';
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
         font-size: 12px;
@@ -661,8 +708,8 @@ type DatePickerAnchor = 'date' | 'switch';
         opacity: 0.7;
       }
       .chip-x {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         border-radius: 999px;
         border: 0;
         background: rgba(255, 255, 255, 0.14);
@@ -671,6 +718,12 @@ type DatePickerAnchor = 'date' | 'switch';
         display: grid;
         place-items: center;
         padding: 0;
+        font-size: 0.45em;
+      }
+
+      .chip-x .material-symbols-rounded {
+        font-size: 12px;
+        line-height: 1;
       }
       .chip-x:hover {
         background: rgba(255, 255, 255, 0.2);
@@ -682,36 +735,50 @@ type DatePickerAnchor = 'date' | 'switch';
         color: inherit;
       }
 
+      .chip-add .material-symbols-rounded {
+        font-size: 16px;
+        line-height: 1;
+      }
+
       .tag-editor {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
+        padding: 0 12px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
+        font-size: 12px;
       }
 
       .tag-input {
-        width: 140px;
+        width: 120px;
         background: transparent;
         border: 0;
         outline: none;
         color: inherit;
+        font-size: 12px;
+        line-height: 1;
       }
 
       .tag-ok {
-        width: 28px;
-        height: 28px;
+        width: 16px;
+        height: 16px;
         border-radius: 999px;
         border: 0;
         background: rgba(255, 255, 255, 0.14);
         color: inherit;
         display: grid;
+        padding: 0;
         place-items: center;
         cursor: pointer;
       }
       .tag-ok:hover {
         background: rgba(255, 255, 255, 0.2);
+      }
+
+      .tag-ok .material-symbols-rounded {
+        font-size: 12px;
+        line-height: 1;
       }
     `,
   ],
@@ -719,9 +786,12 @@ type DatePickerAnchor = 'date' | 'switch';
 export class TaskCardComponent implements OnChanges {
   @Input({ required: true }) task!: Task;
   @Input({ required: true }) accent!: string;
+  @ViewChild('titleField') titleField?: ElementRef<HTMLInputElement>;
+  @ViewChild('tagEditor') tagEditor?: ElementRef<HTMLElement>;
   @ViewChild('timeField') timeField?: ElementRef<HTMLElement>;
 
   @Output() changed = new EventEmitter<{ id: string; patch: Partial<Task> }>();
+  @Output() deleteRequested = new EventEmitter<{ id: string; title: string }>();
   @Output() datePickerRequested = new EventEmitter<{
     taskId: string;
     rect: DOMRect;
@@ -740,6 +810,9 @@ export class TaskCardComponent implements OnChanges {
 
   descriptionDraft = '';
   private descriptionFocused = false;
+
+  titleDraft = '';
+  private titleFocused = false;
 
   addingTag = signal(false);
   newTag = signal('');
@@ -773,9 +846,17 @@ export class TaskCardComponent implements OnChanges {
     this.expanded.set(!this.expanded());
   }
 
+  requestDelete(ev: MouseEvent): void {
+    ev.stopPropagation();
+    this.deleteRequested.emit({ id: this.task.id, title: this.task.title });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if ('task' in changes && !this.descriptionFocused) {
       this.descriptionDraft = this.task.description ?? '';
+    }
+    if ('task' in changes && !this.titleFocused) {
+      this.titleDraft = this.task.title ?? '';
     }
   }
 
@@ -859,11 +940,64 @@ export class TaskCardComponent implements OnChanges {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.timePickerOpen()) return;
     const target = event.target as Node | null;
-    const field = this.timeField?.nativeElement;
-    if (field && target && field.contains(target)) return;
-    this.timePickerOpen.set(false);
+
+    if (this.timePickerOpen()) {
+      const field = this.timeField?.nativeElement;
+      if (!(field && target && field.contains(target))) {
+        this.timePickerOpen.set(false);
+      }
+    }
+
+    this.commitTitleOnOutsideClick(target);
+    this.closeTagEditorOnOutsideClick(target);
+  }
+
+  onTitleFocus(): void {
+    this.titleFocused = true;
+  }
+
+  onTitleBlur(): void {
+    this.titleFocused = false;
+  }
+
+  private commitTitleOnOutsideClick(target: Node | null): void {
+    if (!this.expanded()) return;
+    if (!target) return;
+
+    const titleEl = this.titleField?.nativeElement;
+    if (titleEl && titleEl.contains(target)) return;
+
+    const targetEl = target as HTMLElement;
+    if (targetEl?.closest?.('button')) return;
+
+    this.commitTitleIfChanged();
+  }
+
+  private commitTitleIfChanged(): void {
+    const next = this.titleDraft.trim();
+    if (!next) {
+      this.titleDraft = this.task.title;
+      return;
+    }
+    if (next === this.task.title) return;
+    this.changed.emit({ id: this.task.id, patch: { title: next } });
+  }
+
+  private closeTagEditorOnOutsideClick(target: Node | null): void {
+    if (!this.addingTag()) return;
+    if (!target) {
+      this.cancelAddTag();
+      return;
+    }
+
+    const editorEl = this.tagEditor?.nativeElement;
+    if (editorEl && editorEl.contains(target)) return;
+
+    const targetEl = target as HTMLElement;
+    if (targetEl?.closest?.('.chip-add')) return;
+
+    this.cancelAddTag();
   }
 
   private getAnchorRect(ev?: Event): DOMRect | null {

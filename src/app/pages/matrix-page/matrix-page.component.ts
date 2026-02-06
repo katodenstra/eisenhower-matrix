@@ -57,7 +57,7 @@ type ListsMap = Record<QuadrantId, Task[]>;
                 (newTask)="openCreate(q.id)"
                 (toggleMatrixExpand)="toggleMatrixExpand($event)"
                 (taskChanged)="onTaskChanged($event)"
-                (taskDeleted)="store.deleteTask($event)"
+                (taskDeleteRequested)="openDeleteDialog($event)"
                 (datePickerRequested)="openDatePickerForTask($event)"
                 (drop)="onDrop($event)"
               />
@@ -82,7 +82,7 @@ type ListsMap = Record<QuadrantId, Task[]>;
             (newTask)="openCreate('UNCATEGORIZED')"
             (toggleMatrixExpand)="toggleMatrixExpand($event)"
             (taskChanged)="onTaskChanged($event)"
-            (taskDeleted)="store.deleteTask($event)"
+            (taskDeleteRequested)="openDeleteDialog($event)"
             (datePickerRequested)="openDatePickerForTask($event)"
             (drop)="onDrop($event)"
           />
@@ -101,7 +101,7 @@ type ListsMap = Record<QuadrantId, Task[]>;
             [connectedTo]="dropListIds"
             (toggleMatrixExpand)="toggleMatrixExpand($event)"
             (taskChanged)="onTaskChanged($event)"
-            (taskDeleted)="store.deleteTask($event)"
+            (taskDeleteRequested)="openDeleteDialog($event)"
             (datePickerRequested)="openDatePickerForTask($event)"
             (drop)="onDrop($event)"
           />
@@ -128,6 +128,29 @@ type ListsMap = Record<QuadrantId, Task[]>;
           (selected)="onDatePicked($event)"
           (close)="closeDatePicker()"
         />
+      }
+
+      @if (deleteDialogOpen()) {
+        <div class="delete-dialog-backdrop" (click)="closeDeleteDialog()">
+          <div
+            class="delete-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Delete task confirmation"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="delete-title">Are you sure you want to delete this task?</div>
+            <div class="delete-name">{{ deleteTaskTitle() }}</div>
+            <div class="delete-actions">
+              <button type="button" class="delete-cancel" (click)="closeDeleteDialog()">
+                Cancel
+              </button>
+              <button type="button" class="delete-confirm" (click)="confirmDeleteDialog()">
+                Delete task
+              </button>
+            </div>
+          </div>
+        </div>
       }
 
       <!-- SYNCING INDICATOR -->
@@ -162,7 +185,7 @@ type ListsMap = Record<QuadrantId, Task[]>;
       }
 
       .matrix-grid-wrap {
-        height: clamp(560px, 72vh, 660px);
+        height: clamp(560px, 82vh, 660px);
       }
 
       /* Grid must allow children to shrink; otherwise the content forces expansion. */
@@ -235,6 +258,66 @@ type ListsMap = Record<QuadrantId, Task[]>;
         grid-template-columns: 1fr 1fr;
         gap: 14px;
         padding: 14px;
+      }
+
+      .delete-dialog-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: grid;
+        place-items: center;
+        z-index: 40;
+      }
+
+      .delete-dialog {
+        width: min(360px, 90%);
+        border-radius: 14px;
+        background: rgba(20, 22, 30, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .delete-title {
+        font-weight: 800;
+      }
+
+      .delete-name {
+        font-size: 13px;
+        opacity: 0.8;
+        word-break: break-word;
+      }
+
+      .delete-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .delete-cancel,
+      .delete-confirm {
+        border-radius: 12px;
+        padding: 8px 12px;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.08);
+        color: inherit;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .delete-confirm {
+        border-color: rgba(255, 92, 92, 0.6);
+        background: rgba(255, 92, 92, 0.1);
+      }
+
+      .delete-confirm:hover {
+        background: rgba(255, 92, 92, 0.15);
+      }
+
+      .delete-cancel:hover {
+        background: rgba(255, 255, 255, 0.12);
       }
 
       @media (max-width: 980px) {
@@ -343,6 +426,10 @@ export class MatrixPageComponent {
   datePickerAnchor = signal<'date' | 'switch'>('date');
   private datePickerAnchorRect: DOMRect | null = null;
 
+  deleteDialogOpen = signal(false);
+  deleteTaskId = signal<string | null>(null);
+  deleteTaskTitle = signal('');
+
   private lists = signal<ListsMap>({
     DO_NOW: [],
     DO_LATER: [],
@@ -393,6 +480,24 @@ export class MatrixPageComponent {
 
   onTaskChanged(ev: { id: string; patch: Partial<Task> }): void {
     this.store.updateTask(ev.id, ev.patch);
+  }
+
+  openDeleteDialog(payload: { id: string; title: string }): void {
+    this.deleteTaskId.set(payload.id);
+    this.deleteTaskTitle.set(payload.title);
+    this.deleteDialogOpen.set(true);
+  }
+
+  closeDeleteDialog(): void {
+    this.deleteDialogOpen.set(false);
+    this.deleteTaskId.set(null);
+    this.deleteTaskTitle.set('');
+  }
+
+  confirmDeleteDialog(): void {
+    const id = this.deleteTaskId();
+    if (id) this.store.deleteTask(id);
+    this.closeDeleteDialog();
   }
 
   /**
@@ -566,6 +671,11 @@ export class MatrixPageComponent {
   }
 
   private expandFromMenu(target: MatrixTarget): void {
+    if (target === 'GRID_VIEW') {
+      this.expandedMatrixId.set(null);
+      return;
+    }
+
     // Completed tasks panel doesn't exist yet; handle later.
     if (target === 'COMPLETED') {
       // For now: expand nothing or open a toast later.

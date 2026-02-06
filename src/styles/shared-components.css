@@ -36,11 +36,11 @@ textarea {
 /* ===== DRAG & DROP ===== */
 
 .cdk-drag {
-  cursor: grab;
+  cursor: default;
 }
 
 .cdk-drag:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .cdk-drag-preview {

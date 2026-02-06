@@ -461,6 +461,7 @@ export class SideNavComponent {
     { label: 'Do later', icon: 'schedule', action: 'DO_LATER' },
     { label: 'Delegate', icon: 'call_split', action: 'DELEGATE' },
     { label: 'Eliminate', icon: 'block', action: 'ELIMINATE' },
+    { label: 'Grid view', icon: 'grid_view', action: 'GRID_VIEW' },
     { label: 'Uncategorised tasks', icon: 'inbox', action: 'UNCATEGORIZED' },
     { label: 'Completed tasks', icon: 'check_circle', action: 'COMPLETED' },
   ];

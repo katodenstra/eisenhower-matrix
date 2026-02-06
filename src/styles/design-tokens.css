@@ -66,17 +66,17 @@
   --focus-outline-offset: 2px;
 
   /* ===== QUADRANT COLORS ===== */
-  --quadrant-do-now-bg: #2fc06a1a;
-  --quadrant-do-now-border: #2fc06a;
+  --quadrant-do-now-bg: #9083ff1a;
+  --quadrant-do-now-border: #9083ff;
 
-  --quadrant-do-later-bg: #4aa3ff1a;
-  --quadrant-do-later-border: #4aa3ff;
+  --quadrant-do-later-bg: #f5a3631a;
+  --quadrant-do-later-border: #f5a363;
 
-  --quadrant-delegate-bg: #f2c94c1a;
-  --quadrant-delegate-border: #f2c94c;
+  --quadrant-delegate-bg: #7af5e71a;
+  --quadrant-delegate-border: #7af5e7;
 
-  --quadrant-eliminate-bg: #ff5c5c1a;
-  --quadrant-eliminate-border: #ff5c5c;
+  --quadrant-eliminate-bg: #f2f3641a;
+  --quadrant-eliminate-border: #f2f364;
 
   /* ===== SEMANTIC COLORS ===== */
   --color-bg-transparent: rgba(255, 255, 255, 0.02);

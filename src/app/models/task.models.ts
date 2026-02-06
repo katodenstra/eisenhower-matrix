@@ -33,28 +33,28 @@ export const QUADRANTS: QuadrantMeta[] = [
     id: 'DO_NOW',
     title: 'Urgent & Important',
     subtitle: 'Do now',
-    bg: '#1d3b2a22', // pale green tint
-    border: '#2fc06a', // dark green
+    bg: 'var(--quadrant-do-now-bg)',
+    border: 'var(--quadrant-do-now-border)',
   },
   {
     id: 'DO_LATER',
     title: 'Urgent & Not Important',
     subtitle: 'Do later',
-    bg: '#16324a22', // pale blue tint
-    border: '#4aa3ff', // dark blue
+    bg: 'var(--quadrant-do-later-bg)',
+    border: 'var(--quadrant-do-later-border)',
   },
   {
     id: 'DELEGATE',
     title: 'Important & Not Urgent',
     subtitle: 'Delegate',
-    bg: '#4a3b1622', // pale mustard tint
-    border: '#f2c94c', // mustard
+    bg: 'var(--quadrant-delegate-bg)',
+    border: 'var(--quadrant-delegate-border)',
   },
   {
     id: 'ELIMINATE',
     title: 'Not Urgent & Not Important',
     subtitle: 'Eliminate',
-    bg: '#4a161622', // pale red tint
-    border: '#ff5c5c', // dark red
+    bg: 'var(--quadrant-eliminate-bg)',
+    border: 'var(--quadrant-eliminate-border)',
   },
 ];
